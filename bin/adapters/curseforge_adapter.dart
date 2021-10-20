@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 
-import '../host_adapter.dart';
+import 'package:console/console.dart';
+
+import 'host_adapter.dart';
 import '../scatter.dart';
 
 class CurseForgeAdapter implements HostAdapter {
@@ -13,7 +15,7 @@ class CurseForgeAdapter implements HostAdapter {
 
   @override
   Future<List<String>> listVersions() async {
-    await ensureTokenLoaded();
+    ensureTokenLoaded();
 
     var response = await client.read(Uri.parse("https://minecraft.curseforge.com/api/game/versions"), headers: {"X-Api-Token": _token!});
 
@@ -24,18 +26,18 @@ class CurseForgeAdapter implements HostAdapter {
 
     for (Map<String, dynamic> version in parsed) {
       if (version["gameVersionTypeID"] == 3 || version["gameVersionTypeID"] == 73247) continue;
-      results.add("Name: ${version["name"]} | Slug: ${version["slug"]}");
+      results.add("${Color.WHITE}Name: ${Color.DARK_BLUE}${version["name"]} ${Color.GRAY}| ${Color.WHITE}Slug: ${Color.DARK_BLUE}${version["slug"]}");
     }
 
     return results;
   }
 
-  Future<void> ensureTokenLoaded() async {
+  void ensureTokenLoaded() {
     if (_token != null) return;
     var file = File("curseforge_token");
 
-    if (!await file.exists()) throw "No CurseForge token found";
+    if (!file.existsSync()) throw "No CurseForge token found";
 
-    _token = (await file.readAsString()).replaceAll("\n", "");
+    _token = (file.readAsStringSync()).replaceAll("\n", "");
   }
 }

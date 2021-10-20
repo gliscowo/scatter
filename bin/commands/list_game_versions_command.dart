@@ -1,6 +1,6 @@
 import 'package:args/args.dart';
 
-import '../host_adapter.dart';
+import '../adapters/host_adapter.dart';
 import '../log.dart';
 import 'scatter_command.dart';
 
@@ -28,13 +28,11 @@ class ListGameVersionsCommand extends ScatterCommand {
 
       if (args.wasParsed("filter")) versions.removeWhere((element) => !element.contains(args["filter"]));
 
-      if (versions.length > 50 && !await prompt("Print all ${versions.length} versions")) return;
+      if (versions.length > 50 && !await ask("Print all ${versions.length} versions")) return;
 
       versions.forEach(print);
-    } on String catch (message) {
-      error("Unable to get versions", message);
     } catch (err) {
-      error("Unable to get versions", err);
+      error(err, message: "Unable to get versions");
     }
   }
 }

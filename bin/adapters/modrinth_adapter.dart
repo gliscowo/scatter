@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import '../host_adapter.dart';
+import 'host_adapter.dart';
 import '../scatter.dart';
 
 class ModrinthAdapter implements HostAdapter {

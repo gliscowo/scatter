@@ -1,7 +1,9 @@
-import 'adapters/curseforge_adapter.dart';
-import 'adapters/modrinth_adapter.dart';
+import 'curseforge_adapter.dart';
+import 'modrinth_adapter.dart';
 
 abstract class HostAdapter {
+  static const List<String> platforms = ["Modrinth", "CurseForge"];
+
   factory HostAdapter(String platform) {
     if (platform == "modrinth") return ModrinthAdapter.instance;
     if (platform == "curseforge") return CurseForgeAdapter.instance;
