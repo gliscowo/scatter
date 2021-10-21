@@ -1,5 +1,6 @@
+import 'dart:io';
+
 import 'package:args/src/arg_results.dart';
-import 'package:console/console.dart';
 
 import '../adapters/host_adapter.dart';
 import '../config//data.dart';
@@ -19,7 +20,7 @@ class AddCommand extends ScatterCommand {
     if (args.rest.isEmpty) throw "No mod id provided";
 
     var modId = args.rest[0];
-    info("Adding a new mod with id '$modId' to the database\n");
+    info("Adding a new mod with id '$modId' to the database\n", frame: true);
 
     var displayName = await prompt("Display Name");
     var modloader = await promptValidated("Modloader", enumMatcher(Modloader.values), invalidMessage: "Unknown modloader");
@@ -28,9 +29,13 @@ class AddCommand extends ScatterCommand {
 
     String? artifactDirectory, artifactFilenamePattern;
     if (await ask("Add artifact location")) {
-      artifactDirectory = await prompt("Artifact directory");
+      artifactDirectory = await promptValidated("Artifact directory", isDirectory, invalidMessage: "This directory does not exist");
       artifactFilenamePattern = await prompt("Artifact filename pattern");
     }
+  }
+
+  bool isDirectory(String dir) {
+    return Directory(dir).existsSync();
   }
 
   static Future<Map<String, String>> promptPlatformIds() async {
@@ -38,9 +43,10 @@ class AddCommand extends ScatterCommand {
 
     do {
       for (var platform in HostAdapter.platforms) {
-        var response = await prompt("$platform Project Id (empty to skip)");
-        if (response.isEmpty) continue;
-        platformIds[platform.toLowerCase()] = response;
+        var platformId = platform.toLowerCase();
+        var response = await promptValidated("$platform Project Id (empty to skip)", HostAdapter(platformId).isProject, invalidMessage: "Invalid project id", emptyIsValid: true);
+        if (response.trim().isEmpty) continue;
+        platformIds[platformId] = response;
       }
       if (platformIds.isEmpty) info("You must provide at least one project id", frame: true);
     } while (platformIds.isEmpty);

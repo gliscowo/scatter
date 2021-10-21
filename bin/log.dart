@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:console/console.dart';
@@ -7,7 +8,9 @@ import 'scatter.dart';
 const Color questionColor = Color.BLUE;
 const Color promptColor = Color.LIGHT_CYAN;
 
-void debug(dynamic message, {bool frame = false}) {
+typedef ResponseValidator = FutureOr<bool> Function(String);
+
+void debug(dynamic message) {
   if (!verbose) return;
   stdout.write("${Color.MAGENTA}[${Color.WHITE}DEBUG${Color.MAGENTA}] ");
   Console.resetAll();
@@ -53,9 +56,10 @@ Future<String> prompt(String message) async {
   return future;
 }
 
-Future<String> promptValidated(String message, ResponseChecker validator, {String invalidMessage = ""}) async {
+Future<String> promptValidated(String message, ResponseValidator validator, {String invalidMessage = "", bool emptyIsValid = false}) async {
   var prompter = Prompter("$message: ");
   String response;
+  bool valid = false;
 
   do {
     promptColor.makeCurrent();
@@ -63,8 +67,8 @@ Future<String> promptValidated(String message, ResponseChecker validator, {Strin
     Console.resetAll();
 
     response = await future;
-    if (!validator(response) && invalidMessage.isNotEmpty) info(invalidMessage, frame: true);
-  } while (!validator(response));
+    if (!(valid = (emptyIsValid && response.trim().isEmpty) || await validator(response)) && invalidMessage.isNotEmpty) info(invalidMessage, frame: true);
+  } while (!valid);
 
   return Future.value(response);
 }

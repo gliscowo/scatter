@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'curseforge_adapter.dart';
 import 'modrinth_adapter.dart';
 
@@ -10,5 +12,7 @@ abstract class HostAdapter {
     throw "Unknown host platform";
   }
 
-  Future<List<String>> listVersions();
+  FutureOr<List<String>> listVersions();
+
+  FutureOr<bool> isProject(String id);
 }

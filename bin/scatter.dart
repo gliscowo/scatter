@@ -19,7 +19,6 @@ bool verbose = false;
 
 void main(List<String> args) async {
   Console.init();
-  print("");
 
   var runner = CommandRunner("scatter", "Scatter mod distribution utility");
   runner.argParser.addFlag("verbose", negatable: false);
