@@ -7,6 +7,27 @@ part 'data.g.dart';
 enum Modloader { fabric, forge }
 
 @JsonSerializable()
+class Tokens {
+  final Map<String, String> tokens;
+
+  Tokens(this.tokens);
+
+  factory Tokens.fromJson(Map<String, dynamic> json) => _$TokensFromJson(json);
+
+  Map<String, dynamic> toJson() => _$TokensToJson(this);
+}
+
+@JsonSerializable()
+class Config {
+
+  Config();
+
+  factory Config.fromJson(Map<String, dynamic> json) => _$ConfigFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ConfigToJson(this);
+}
+
+@JsonSerializable()
 class Database {
   final Map<String, ModInfo> mods;
 
@@ -29,7 +50,8 @@ class ModInfo {
 
   final String? artifact_directory, artifact_filename_pattern;
 
-  ModInfo(this.display_name, this.mod_id, this.modloader, this.platform_ids, this.relations, this.artifact_directory, this.artifact_filename_pattern);
+  ModInfo(this.display_name, this.mod_id, this.modloader, this.platform_ids, this.relations, this.artifact_directory,
+      this.artifact_filename_pattern);
 
   factory ModInfo.fromJson(Map<String, dynamic> json) => _$ModInfoFromJson(json);
 

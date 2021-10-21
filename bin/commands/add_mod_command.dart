@@ -1,7 +1,9 @@
 import 'package:args/src/arg_results.dart';
+import 'package:console/console.dart';
 
 import '../adapters/host_adapter.dart';
-import '../database/data.dart';
+import '../config//data.dart';
+import '../enum_utils.dart';
 import '../log.dart';
 import 'scatter_command.dart';
 
@@ -20,7 +22,7 @@ class AddCommand extends ScatterCommand {
     info("Adding a new mod with id '$modId' to the database\n");
 
     var displayName = await prompt("Display Name");
-    var modloader = await promptValidated("Modloader", _validModloader, invalidMessage: "Unknown modloader");
+    var modloader = await promptValidated("Modloader", enumMatcher(Modloader.values), invalidMessage: "Unknown modloader");
 
     Map<String, String> platformIds = await promptPlatformIds();
 
@@ -29,7 +31,6 @@ class AddCommand extends ScatterCommand {
       artifactDirectory = await prompt("Artifact directory");
       artifactFilenamePattern = await prompt("Artifact filename pattern");
     }
-
   }
 
   static Future<Map<String, String>> promptPlatformIds() async {
@@ -46,10 +47,4 @@ class AddCommand extends ScatterCommand {
 
     return platformIds;
   }
-
-  static bool _validModloader(String string) {
-    return Modloader.values.any((element) => element.toString().split('.')[1] == string);
-  }
 }
-
-

@@ -6,6 +6,18 @@ part of 'data.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+Tokens _$TokensFromJson(Map<String, dynamic> json) => Tokens(
+      Map<String, String>.from(json['tokens'] as Map),
+    );
+
+Map<String, dynamic> _$TokensToJson(Tokens instance) => <String, dynamic>{
+      'tokens': instance.tokens,
+    };
+
+Config _$ConfigFromJson(Map<String, dynamic> json) => Config();
+
+Map<String, dynamic> _$ConfigToJson(Config instance) => <String, dynamic>{};
+
 Database _$DatabaseFromJson(Map<String, dynamic> json) => Database(
       (json['mods'] as Map<String, dynamic>).map(
         (k, e) => MapEntry(k, ModInfo.fromJson(e as Map<String, dynamic>)),

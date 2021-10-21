@@ -5,43 +5,43 @@ import 'package:console/console.dart';
 import 'package:http/http.dart' as http;
 
 import 'commands/add_mod_command.dart';
+import 'commands/config_command.dart';
 import 'commands/list_game_versions_command.dart';
 import 'commands/mod_info_command.dart';
 import 'commands/upload_command.dart';
-import 'database/database.dart';
+import 'config/config.dart';
 import 'log.dart';
 
 const String version = "0.1";
 
 final client = http.Client();
+bool verbose = false;
 
 void main(List<String> args) async {
   Console.init();
   print("");
 
   var runner = CommandRunner("scatter", "Scatter mod distribution utility");
-  runner.argParser.addFlag("debug", negatable: false);
+  runner.argParser.addFlag("verbose", negatable: false);
   runner.argParser.addFlag("version", negatable: false, help: "Print the version and exit");
 
   runner.addCommand(ListGameVersionsCommand());
   runner.addCommand(UploadCommand());
   runner.addCommand(AddCommand());
   runner.addCommand(InfoCommand());
-
-  var parseResults = runner.parse(args);
-  if (parseResults.wasParsed("version")) {
-    print("scatter $version");
-    return;
-  }
+  runner.addCommand(ConfigCommand());
 
   try {
-    DatabaseManager.loadDatabase();
-  } catch (err) {
-    error(err, message: "Could not load config");
-    scatterExit(1);
-  }
+    var parseResults = runner.parse(args);
+    verbose = parseResults.wasParsed("verbose");
 
-  try {
+    if (parseResults.wasParsed("version")) {
+      print("scatter $version");
+      return;
+    }
+
+    ConfigManager.loadConfigs();
+
     await runner.run(args);
   } catch (err) {
     error(err);

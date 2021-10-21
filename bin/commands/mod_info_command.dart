@@ -1,6 +1,6 @@
 import 'package:args/src/arg_results.dart';
 
-import '../database/database.dart';
+import '../config/config.dart';
 import '../log.dart';
 import 'scatter_command.dart';
 
@@ -15,7 +15,7 @@ class InfoCommand extends ScatterCommand {
   void execute(ArgResults args) async {
     if (args.rest.isEmpty) throw "No mod id provided";
 
-    var mod = DatabaseManager.getMod(args.rest[0]);
+    var mod = ConfigManager.getMod(args.rest[0]);
 
     if (mod == null) {
       info("Mod not found");

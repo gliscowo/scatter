@@ -2,8 +2,18 @@ import 'dart:io';
 
 import 'package:console/console.dart';
 
+import 'scatter.dart';
+
 const Color questionColor = Color.BLUE;
 const Color promptColor = Color.LIGHT_CYAN;
+
+void debug(dynamic message, {bool frame = false}) {
+  if (!verbose) return;
+  stdout.write("${Color.MAGENTA}[${Color.WHITE}DEBUG${Color.MAGENTA}] ");
+  Console.resetAll();
+
+  print(message);
+}
 
 void info(dynamic message, {bool frame = false}) {
   if (frame) print("");
@@ -19,6 +29,7 @@ void error(dynamic error, {dynamic message}) {
   if (message != null) print("$message\n");
 
   print(error);
+  if (error is Error) print(error.stackTrace);
 
   Console.resetAll();
 }
