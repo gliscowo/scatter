@@ -20,7 +20,8 @@ class InfoCommand extends ScatterCommand {
     if (mod == null) {
       info("Mod not found");
     } else {
-      info(mod.display_name);
+      info("Dumping database entry for mod '${args.rest[0]}'", frame: true);
+      mod.dumpToConsole();
     }
   }
 }

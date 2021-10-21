@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:console/console.dart';
 import 'package:http/http.dart';
 
+import '../config/config.dart';
 import '../log.dart';
 import '../scatter.dart';
 import 'host_adapter.dart';
@@ -13,15 +13,11 @@ class CurseForgeAdapter implements HostAdapter {
   static const String _url = "https://minecraft.curseforge.com";
   static final CurseForgeAdapter instance = CurseForgeAdapter._();
 
-  String? _token;
-
   CurseForgeAdapter._();
 
   @override
   Future<List<String>> listVersions() async {
-    ensureTokenLoaded();
-
-    var response = await client.read(Uri.parse("$_url/api/game/versions"), headers: {"X-Api-Token": _token!});
+    var response = await client.read(Uri.parse("$_url/api/game/versions"), headers: createTokenHeader());
 
     var parsed = jsonDecode(response);
     if (parsed is! List<dynamic>) throw "Invalid API response";
@@ -36,20 +32,10 @@ class CurseForgeAdapter implements HostAdapter {
     return results;
   }
 
-  void ensureTokenLoaded() {
-    if (_token != null) return;
-    var file = File("curseforge_token");
-
-    if (!file.existsSync()) throw "No CurseForge token found";
-
-    _token = (file.readAsStringSync()).replaceAll("\n", "");
-  }
-
   @override
   FutureOr<bool> isProject(String id) async {
-    ensureTokenLoaded();
     try {
-      var response = await client.get(Uri.parse("$_url/api/projects/$id/localization/export"), headers: {"X-Api-Token": _token!});
+      var response = await client.get(Uri.parse("$_url/api/projects/$id/localization/export"), headers: createTokenHeader());
 
       debug("Response status: ${response.statusCode}");
       debug("Response body: ${response.body.length > 300 ? "<truncated>" : response.body}");
@@ -59,5 +45,12 @@ class CurseForgeAdapter implements HostAdapter {
       debug(err);
       return false;
     }
+  }
+
+  @override
+  String getId() => "curseforge";
+
+  Map<String, String> createTokenHeader() {
+    return {"X-Api-Token": ConfigManager.getToken(getId())};
   }
 }

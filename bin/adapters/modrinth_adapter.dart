@@ -29,4 +29,7 @@ class ModrinthAdapter implements HostAdapter {
       return false;
     }
   }
+
+  @override
+  String getId() => "modrinth";
 }

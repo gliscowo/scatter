@@ -2,9 +2,13 @@
 
 import 'package:json_annotation/json_annotation.dart';
 
+import '../log.dart';
+
 part 'data.g.dart';
 
 enum Modloader { fabric, forge }
+
+enum DependencyType { optional, required, embedded }
 
 @JsonSerializable()
 class Tokens {
@@ -19,7 +23,6 @@ class Tokens {
 
 @JsonSerializable()
 class Config {
-
   Config();
 
   factory Config.fromJson(Map<String, dynamic> json) => _$ConfigFromJson(json);
@@ -50,12 +53,37 @@ class ModInfo {
 
   final String? artifact_directory, artifact_filename_pattern;
 
-  ModInfo(this.display_name, this.mod_id, this.modloader, this.platform_ids, this.relations, this.artifact_directory,
-      this.artifact_filename_pattern);
+  ModInfo(this.display_name, this.mod_id, this.modloader, this.platform_ids, this.relations, this.artifact_directory, this.artifact_filename_pattern);
 
   factory ModInfo.fromJson(Map<String, dynamic> json) => _$ModInfoFromJson(json);
 
   Map<String, dynamic> toJson() => _$ModInfoToJson(this);
+
+  void dumpToConsole() {
+    printKeyValuePair("Name", "$display_name ($mod_id)");
+    printKeyValuePair("Modloader", modloader);
+    platform_ids.forEach((key, value) {
+      printKeyValuePair("$key project id", value);
+    });
+
+    if (artifact_directory == null) {
+      print("No artifact location defined");
+    } else {
+      printKeyValuePair("Artifact directory", artifact_directory);
+      printKeyValuePair("Artifact filename pattern", artifact_filename_pattern);
+    }
+
+    if (relations.isEmpty) {
+      print("No dependencies defined");
+    } else {
+      print("Dependencies:");
+      for (var info in relations) {
+        print("");
+        printKeyValuePair("Slug", info.slug);
+        printKeyValuePair("Type", info.type);
+      }
+    }
+  }
 }
 
 @JsonSerializable()

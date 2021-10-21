@@ -10,9 +10,9 @@ class ConfigManager {
   static const JsonEncoder _encoder = JsonEncoder.withIndent("    ");
 
   static final Map<ConfigType, ConfigStore> _configs = {
-    ConfigType.config: ConfigStore(Config(), (json) => Config.fromJson(json), ConfigType.config),
-    ConfigType.database: ConfigStore(Database({}), (json) => Database.fromJson(json), ConfigType.database),
-    ConfigType.tokens: ConfigStore(Tokens({}), (json) => Tokens.fromJson(json), ConfigType.tokens)
+    ConfigType.config: ConfigStore<Config>(Config(), (json) => Config.fromJson(json), ConfigType.config),
+    ConfigType.database: ConfigStore<Database>(Database({}), (json) => Database.fromJson(json), ConfigType.database),
+    ConfigType.tokens: ConfigStore<Tokens>(Tokens({}), (json) => Tokens.fromJson(json), ConfigType.tokens)
   };
 
   static void loadConfigs() {
@@ -24,7 +24,12 @@ class ConfigManager {
   }
 
   static ModInfo? getMod(String modId) {
-    return (_configs[ConfigType.database] as Database).mods[modId];
+    return getConfigObject(ConfigType.database).mods[modId];
+  }
+
+  static void addMod(ModInfo info) {
+    getConfigObject(ConfigType.database).mods[info.mod_id] = info;
+    _save(ConfigType.database);
   }
 
   static String dumpConfig(ConfigType type) {
@@ -35,23 +40,44 @@ class ConfigManager {
     return _configs[type]!.file.toString();
   }
 
+  static void setToken(String platform, String? token) {
+    if (token == null) {
+      getConfigObject(ConfigType.tokens).tokens.remove(platform);
+    } else {
+      getConfigObject(ConfigType.tokens).tokens[platform] = token;
+    }
+    _save(ConfigType.tokens);
+  }
+
+  static String getToken(String platform) {
+    var tokens = getConfigObject(ConfigType.tokens).tokens;
+    if (!tokens.containsKey(platform)) throw "No token saved for platform '$platform'. Use 'scatter config --set-token $platform'";
+    return tokens[platform]!;
+  }
+
   static String _getConfigDirectory() {
     if (Platform.isWindows) return "${Platform.environment["APPDATA"]}\\scatter\\";
     return "${Platform.environment["HOME"]}/.config/scatter/";
   }
+
+  static void _save(ConfigType config) {
+    _configs[config]!.save(_encoder);
+  }
+
+  static T getConfigObject<T>(ConfigType<T> type) {
+    return (_configs[type] as ConfigStore<T>).data;
+  }
 }
 
 class ConfigStore<T> {
-  final ConfigType type;
-  final String name;
-
+  final Deserializer deserializer;
+  final ConfigType<T> type;
   late final File file;
+
   T data;
 
-  final Deserializer deserializer;
-
-  ConfigStore(this.data, this.deserializer, this.type) : name = type.toString().split('.')[1] {
-    file = File("${ConfigManager._getConfigDirectory()}$name.json");
+  ConfigStore(this.data, this.deserializer, this.type) {
+    file = File("${ConfigManager._getConfigDirectory()}${type.name}.json");
   }
 
   void read(JsonEncoder encoder) {
@@ -66,8 +92,24 @@ class ConfigStore<T> {
   }
 
   void save(JsonEncoder encoder) {
+    debug("Saving $file");
+
     file.writeAsStringSync(encoder.convert(data));
   }
 }
 
-enum ConfigType { config, database, tokens }
+class ConfigType<T> {
+  static final ConfigType<Database> database = ConfigType("database");
+  static final ConfigType<Tokens> tokens = ConfigType("tokens");
+  static final ConfigType<Config> config = ConfigType("config");
+
+  static final Map<String, ConfigType> _byName = {"database": database, "tokens": tokens, "config": config};
+
+  final String name;
+
+  ConfigType(this.name);
+
+  static ConfigType? get(String name) {
+    return _byName[name];
+  }
+}

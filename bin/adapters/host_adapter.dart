@@ -12,6 +12,8 @@ abstract class HostAdapter {
     throw "Unknown host platform";
   }
 
+  String getId();
+
   FutureOr<List<String>> listVersions();
 
   FutureOr<bool> isProject(String id);
