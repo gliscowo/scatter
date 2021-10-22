@@ -23,20 +23,20 @@ class ConfigManager {
     });
   }
 
-  // Mod info managements
+  // Mod info management
 
   static ModInfo? getMod(String modId) {
     return getConfigObject(ConfigType.database).mods[modId];
   }
 
-  static void addMod(ModInfo info) {
+  static void storeMod(ModInfo info) {
     var added = getConfigObject(ConfigType.database).mods[info.mod_id] = info;
-    _save(ConfigType.database);
+    save(ConfigType.database);
   }
 
   static bool removeMod(String modid) {
     var removed = getConfigObject(ConfigType.database).mods.remove(modid);
-    _save(ConfigType.database);
+    save(ConfigType.database);
     return removed != null;
   }
 
@@ -48,7 +48,7 @@ class ConfigManager {
     } else {
       getConfigObject(ConfigType.tokens).tokens[platform] = token;
     }
-    _save(ConfigType.tokens);
+    save(ConfigType.tokens);
   }
 
   static String getToken(String platform) {
@@ -64,7 +64,7 @@ class ConfigManager {
   }
 
   static String getConfigFile(ConfigType type) {
-    return _configs[type]!.file.toString();
+    return _configs[type]!.file.path;
   }
 
   static String _getConfigDirectory() {
@@ -72,7 +72,7 @@ class ConfigManager {
     return "${Platform.environment["HOME"]}/.config/scatter/";
   }
 
-  static void _save(ConfigType config) {
+  static void save(ConfigType config) {
     _configs[config]!.save(_encoder);
   }
 

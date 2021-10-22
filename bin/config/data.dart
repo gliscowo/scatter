@@ -43,21 +43,23 @@ class Database {
 
 @JsonSerializable()
 class ModInfo {
-  final String display_name, mod_id;
+  String display_name, mod_id;
 
-  final String modloader;
+  String modloader;
+
+  String? artifact_directory, artifact_filename_pattern;
 
   final Map<String, String> platform_ids;
 
   final List<DependencyInfo> relations;
-
-  final String? artifact_directory, artifact_filename_pattern;
 
   ModInfo(this.display_name, this.mod_id, this.modloader, this.platform_ids, this.relations, this.artifact_directory, this.artifact_filename_pattern);
 
   factory ModInfo.fromJson(Map<String, dynamic> json) => _$ModInfoFromJson(json);
 
   Map<String, dynamic> toJson() => _$ModInfoToJson(this);
+
+  bool artifactLocationDefined() => artifact_filename_pattern != null && artifact_directory != null;
 
   void dumpToConsole() {
     printKeyValuePair("Name", "$display_name ($mod_id)");
@@ -66,21 +68,17 @@ class ModInfo {
       printKeyValuePair("$key project id", value);
     });
 
-    if (artifact_directory == null) {
-      print("No artifact location defined");
-    } else {
-      printKeyValuePair("Artifact directory", artifact_directory);
-      printKeyValuePair("Artifact filename pattern", artifact_filename_pattern);
-    }
+    printKeyValuePair("Artifact directory", artifact_directory ?? "<undefined>");
+    printKeyValuePair("Artifact filename pattern", artifact_filename_pattern ?? "<undefined>");
 
     if (relations.isEmpty) {
       print("No dependencies defined");
     } else {
       print("Dependencies:");
       for (var info in relations) {
+        printKeyValuePair("  Slug", info.slug);
+        printKeyValuePair("  Type", info.type);
         print("");
-        printKeyValuePair("Slug", info.slug);
-        printKeyValuePair("Type", info.type);
       }
     }
   }
@@ -88,7 +86,7 @@ class ModInfo {
 
 @JsonSerializable()
 class DependencyInfo {
-  final String slug, type;
+  String slug, type;
 
   DependencyInfo(this.slug, this.type);
 

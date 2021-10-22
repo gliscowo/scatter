@@ -21,6 +21,9 @@ class AddCommand extends ScatterCommand {
     if (args.rest.isEmpty) throw "No mod id provided";
 
     var modId = args.rest[0];
+
+    if (ConfigManager.getMod(modId) != null) throw "A mod with id '$modId' already exists in the database. Did you mean 'scatter edit $modId'?";
+
     info("Adding a new mod with id '$modId' to the database", frame: true);
 
     var displayName = await prompt("Display Name");
@@ -52,7 +55,7 @@ class AddCommand extends ScatterCommand {
     modInfo.dumpToConsole();
 
     if (!await ask("Commit")) return;
-    ConfigManager.addMod(modInfo);
+    ConfigManager.storeMod(modInfo);
     info("Successfully added mod '${modInfo.display_name}' to the database");
   }
 

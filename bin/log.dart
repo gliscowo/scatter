@@ -34,7 +34,7 @@ void error(dynamic error, {dynamic message}) {
   if (message != null) print("$message\n");
 
   print(error);
-  if (error is Error) print(error.stackTrace);
+  if (error is Error && verbose) print(error.stackTrace);
 
   Console.resetAll();
 }

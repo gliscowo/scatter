@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 
 import 'commands/add_mod_command.dart';
 import 'commands/config_command.dart';
+import 'commands/edit_mod_command.dart';
 import 'commands/list_game_versions_command.dart';
 import 'commands/mod_info_command.dart';
 import 'commands/remove_mod_command.dart';
@@ -31,6 +32,7 @@ void main(List<String> args) async {
   runner.addCommand(InfoCommand());
   runner.addCommand(ConfigCommand());
   runner.addCommand(RemoveCommand());
+  runner.addCommand(EditCommand());
 
   try {
     var parseResults = runner.parse(args);
