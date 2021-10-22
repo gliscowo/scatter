@@ -23,22 +23,24 @@ class ConfigManager {
     });
   }
 
+  // Mod info managements
+
   static ModInfo? getMod(String modId) {
     return getConfigObject(ConfigType.database).mods[modId];
   }
 
   static void addMod(ModInfo info) {
-    getConfigObject(ConfigType.database).mods[info.mod_id] = info;
+    var added = getConfigObject(ConfigType.database).mods[info.mod_id] = info;
     _save(ConfigType.database);
   }
 
-  static String dumpConfig(ConfigType type) {
-    return _encoder.convert(_configs[type]!.data);
+  static bool removeMod(String modid) {
+    var removed = getConfigObject(ConfigType.database).mods.remove(modid);
+    _save(ConfigType.database);
+    return removed != null;
   }
 
-  static String getConfigFile(ConfigType type) {
-    return _configs[type]!.file.toString();
-  }
+  // Token management
 
   static void setToken(String platform, String? token) {
     if (token == null) {
@@ -53,6 +55,16 @@ class ConfigManager {
     var tokens = getConfigObject(ConfigType.tokens).tokens;
     if (!tokens.containsKey(platform)) throw "No token saved for platform '$platform'. Use 'scatter config --set-token $platform'";
     return tokens[platform]!;
+  }
+
+  // Utility
+
+  static String dumpConfig(ConfigType type) {
+    return _encoder.convert(_configs[type]!.data);
+  }
+
+  static String getConfigFile(ConfigType type) {
+    return _configs[type]!.file.toString();
   }
 
   static String _getConfigDirectory() {
