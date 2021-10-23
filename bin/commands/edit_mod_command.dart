@@ -1,6 +1,7 @@
 import 'package:args/src/arg_results.dart';
 import 'package:console/console.dart';
 
+import '../adapters/host_adapter.dart';
 import '../config/config.dart';
 import '../config/data.dart';
 import '../enum_utils.dart';
@@ -72,7 +73,7 @@ class EditCommand extends ScatterCommand {
           }
         } else if (command == "set") {
           if (args.length < 2) {
-            throw "Missing${args.isEmpty ? " property and" : ""} value to set. ${args.isEmpty ? "Available: 'name', 'id', 'modloader', 'artifact_directory', 'filename_pattern'" : ""}";
+            throw "Missing${args.isEmpty ? " property and" : ""} value to set. ${args.isEmpty ? "Available: 'name', 'id', 'modloader', 'artifact_directory', 'filename_pattern', 'platform_id'" : ""}";
           }
 
           if (args[0] == "name") {
@@ -97,6 +98,17 @@ class EditCommand extends ScatterCommand {
 
             mod.modloader = args[1];
             info("Modloader changed to '${args[1]}'");
+          }  else if (args[0] == "platform_id") {
+            if (args.length < 3) throw "Missing ${args.length < 2 ? "platform and " : ""}id to set";
+
+            var platform = args[1];
+            var id = args[2];
+
+            HostAdapter(platform);
+
+            mod.platform_ids[platform] = id;
+
+            info("'$platform' id set to '$id'");
           } else if (args[0] == "artifact_directory") {
             var dir = input.substring("set artifact_directory ".length);
             mod.artifact_directory = dir;
