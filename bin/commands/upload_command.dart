@@ -1,6 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:archive/archive.dart';
+import 'package:archive/archive_io.dart';
 import 'package:args/src/arg_results.dart';
+import 'package:toml/toml.dart';
 
 import '../adapters/host_adapter.dart';
 import '../config/config.dart';
@@ -17,7 +21,8 @@ class UploadCommand extends ScatterCommand {
 
   UploadCommand() {
     argParser.addFlag("override-game-versions", abbr: "o", negatable: false, help: "Prompt which game versions to use instead of using the default ones");
-    argParser.addFlag("read-as-file", abbr: "f", negatable: false, help: "Always interpret the second argument as a file, even if an artifact location is defined");
+    argParser.addFlag("read-as-file",
+        abbr: "f", negatable: false, help: "Always interpret the second argument as a file, even if an artifact location is defined");
   }
 
   @override
@@ -30,8 +35,7 @@ class UploadCommand extends ScatterCommand {
     File targetFile;
     var uploadTarget = args.rest[1];
     if (mod.artifactLocationDefined() && !args.wasParsed("read-as-file")) {
-      var targetFileLocation =
-          "${mod.artifact_directory!.replaceFirst("[\\/]", "", mod.artifact_directory!.length)}/${mod.artifact_filename_pattern!.replaceAll("{}", uploadTarget)}";
+      var targetFileLocation = "${mod.artifact_directory!}/${mod.artifact_filename_pattern!.replaceAll("{}", uploadTarget)}";
       targetFile = File(targetFileLocation);
     } else {
       targetFile = File(uploadTarget);
@@ -49,7 +53,20 @@ class UploadCommand extends ScatterCommand {
       gameVersions.addAll(userVersions.map((e) => e.trim()));
     }
 
-    var spec = UploadSpec(targetFile, uploadTarget, desc, type, gameVersions);
+    String? artifactVersion;
+    var archive = ZipDecoder().decodeBytes(targetFile.readAsBytesSync());
+
+    if (mod.modloader == "fabric") {
+      var fmjFile = archive.findFile("fabric.mod.json");
+      if (fmjFile == null) throw "The provided artifact is not a fabric mod";
+      artifactVersion = jsonDecode(utf8.decode(fmjFile.content))["version"];
+    } else if (mod.modloader == "forge") {
+      var modTomlFile = archive.findFile("META-INF/mods.toml");
+      if (modTomlFile == null) throw "The provided artifact is not a forge mod";
+      artifactVersion = TomlDocument.parse(utf8.decode(modTomlFile.content)).toMap()["mods"][0]["version"];
+    }
+
+    var spec = UploadSpec(targetFile, artifactVersion ?? uploadTarget, desc, type, gameVersions);
 
     HostAdapter("modrinth").upload(mod, spec);
 
