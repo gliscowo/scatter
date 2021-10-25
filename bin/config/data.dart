@@ -6,10 +6,6 @@ import '../log.dart';
 
 part 'data.g.dart';
 
-enum Modloader { fabric, forge }
-
-enum DependencyType { optional, required, embedded }
-
 @JsonSerializable()
 class Tokens {
   final Map<String, String> tokens;
@@ -23,7 +19,9 @@ class Tokens {
 
 @JsonSerializable()
 class Config {
-  Config();
+  final List<String> default_target_versions;
+
+  Config(this.default_target_versions);
 
   factory Config.fromJson(Map<String, dynamic> json) => _$ConfigFromJson(json);
 

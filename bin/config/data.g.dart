@@ -14,9 +14,15 @@ Map<String, dynamic> _$TokensToJson(Tokens instance) => <String, dynamic>{
       'tokens': instance.tokens,
     };
 
-Config _$ConfigFromJson(Map<String, dynamic> json) => Config();
+Config _$ConfigFromJson(Map<String, dynamic> json) => Config(
+      (json['default_target_versions'] as List<dynamic>)
+          .map((e) => e as String)
+          .toList(),
+    );
 
-Map<String, dynamic> _$ConfigToJson(Config instance) => <String, dynamic>{};
+Map<String, dynamic> _$ConfigToJson(Config instance) => <String, dynamic>{
+      'default_target_versions': instance.default_target_versions,
+    };
 
 Database _$DatabaseFromJson(Map<String, dynamic> json) => Database(
       (json['mods'] as Map<String, dynamic>).map(
@@ -44,10 +50,10 @@ Map<String, dynamic> _$ModInfoToJson(ModInfo instance) => <String, dynamic>{
       'display_name': instance.display_name,
       'mod_id': instance.mod_id,
       'modloader': instance.modloader,
-      'platform_ids': instance.platform_ids,
-      'relations': instance.relations,
       'artifact_directory': instance.artifact_directory,
       'artifact_filename_pattern': instance.artifact_filename_pattern,
+      'platform_ids': instance.platform_ids,
+      'relations': instance.relations,
     };
 
 DependencyInfo _$DependencyInfoFromJson(Map<String, dynamic> json) =>

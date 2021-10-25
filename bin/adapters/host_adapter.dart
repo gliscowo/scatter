@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import '../config/data.dart';
+import '../util.dart';
 import 'curseforge_adapter.dart';
 import 'modrinth_adapter.dart';
 
@@ -17,4 +19,6 @@ abstract class HostAdapter {
   FutureOr<List<String>> listVersions();
 
   FutureOr<bool> isProject(String id);
+
+  FutureOr<bool> upload(ModInfo mod, UploadSpec spec);
 }

@@ -9,8 +9,10 @@ typedef Deserializer<T> = T Function(Map<String, dynamic> json);
 class ConfigManager {
   static const JsonEncoder _encoder = JsonEncoder.withIndent("    ");
 
+  ConfigManager._ ();
+
   static final Map<ConfigType, ConfigStore> _configs = {
-    ConfigType.config: ConfigStore<Config>(Config(), (json) => Config.fromJson(json), ConfigType.config),
+    ConfigType.config: ConfigStore<Config>(Config([]), (json) => Config.fromJson(json), ConfigType.config),
     ConfigType.database: ConfigStore<Database>(Database({}), (json) => Database.fromJson(json), ConfigType.database),
     ConfigType.tokens: ConfigStore<Tokens>(Tokens({}), (json) => Tokens.fromJson(json), ConfigType.tokens)
   };
@@ -23,6 +25,25 @@ class ConfigManager {
     });
   }
 
+  // Config management
+
+  static bool removeDefaultVersion(String version) {
+    var removed = getDefaultVersions().remove(version);
+    save(ConfigType.config);
+    return removed;
+  }
+
+  static bool addDefaultVersion(String version) {
+    if (getDefaultVersions().contains(version)) return false;
+    getDefaultVersions().add(version);
+    save(ConfigType.config);
+    return true;
+  }
+
+  static List<String> getDefaultVersions() {
+    return getConfigObject(ConfigType.config).default_target_versions;
+  }
+
   // Mod info management
 
   static ModInfo? getMod(String modId) {
@@ -30,7 +51,7 @@ class ConfigManager {
   }
 
   static void storeMod(ModInfo info) {
-    var added = getConfigObject(ConfigType.database).mods[info.mod_id] = info;
+    getConfigObject(ConfigType.database).mods[info.mod_id] = info;
     save(ConfigType.database);
   }
 

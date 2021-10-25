@@ -2,11 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:console/console.dart';
-import 'package:http/http.dart';
 
 import '../config/config.dart';
+import '../config/data.dart';
 import '../log.dart';
 import '../scatter.dart';
+import '../util.dart';
 import 'host_adapter.dart';
 
 class CurseForgeAdapter implements HostAdapter {
@@ -41,10 +42,16 @@ class CurseForgeAdapter implements HostAdapter {
       debug("Response body: ${response.body.length > 300 ? "<truncated>" : response.body}");
 
       return response.statusCode == 403;
-    } on ClientException catch (err) {
+    } catch (err) {
       debug(err);
       return false;
     }
+  }
+
+  @override
+  FutureOr<bool> upload(ModInfo mod, UploadSpec spec) {
+
+    return true;
   }
 
   @override

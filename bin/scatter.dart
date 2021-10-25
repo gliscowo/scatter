@@ -7,7 +7,6 @@ import 'package:http/http.dart' as http;
 import 'commands/add_mod_command.dart';
 import 'commands/config_command.dart';
 import 'commands/edit_mod_command.dart';
-import 'commands/list_game_versions_command.dart';
 import 'commands/mod_info_command.dart';
 import 'commands/remove_mod_command.dart';
 import 'commands/upload_command.dart';
@@ -22,17 +21,15 @@ bool verbose = false;
 void main(List<String> args) async {
   Console.init();
 
-
   var runner = CommandRunner("scatter", "Scatter mod distribution utility");
   runner.argParser.addFlag("verbose", negatable: false);
   runner.argParser.addFlag("version", negatable: false, help: "Print the version and exit");
 
-  runner.addCommand(ListGameVersionsCommand());
-  runner.addCommand(UploadCommand());
   runner.addCommand(AddCommand());
   runner.addCommand(InfoCommand());
   runner.addCommand(ConfigCommand());
   runner.addCommand(RemoveCommand());
+  runner.addCommand(UploadCommand());
   runner.addCommand(EditCommand());
 
   try {

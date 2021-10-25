@@ -15,6 +15,7 @@ class ConfigCommand extends ScatterCommand {
   ConfigCommand() {
     argParser.addOption("dump", help: "Dumps the entire config file to the console");
     argParser.addOption("set-token", help: "Set the token for the given platform");
+    argParser.addFlag("default-versions", help: "Change the default versions all uploaded files are marked compatible with", negatable: false);
   }
 
   @override
@@ -38,6 +39,39 @@ class ConfigCommand extends ScatterCommand {
         ConfigManager.setToken(platform.getId(), token);
         info("Token for platform '${platform.getId()}' updated", frame: true);
       }
+
+      return;
+    } else if (args.wasParsed("default-versions")) {
+      info("Editing default versions. Prefix with '-' to remove a version, leave empty to exit");
+      info("Use '-' to clear, '#' to display current default versions");
+      info("Current default versions: ${ConfigManager.getDefaultVersions()}");
+
+      String version;
+      do {
+        version = (await prompt("Version")).trim();
+
+        if (version == "#") {
+          info("Current default versions: ${ConfigManager.getDefaultVersions()}");
+        } else if (version.startsWith("-")) {
+          if (version.substring(1).isEmpty) {
+            ConfigManager.getDefaultVersions().clear();
+            ConfigManager.save(ConfigType.config);
+            info("Default versions successfully cleared");
+          } else {
+            if (ConfigManager.removeDefaultVersion(version.substring(1))) {
+              info("Version '${version.substring(1)}' successfully removed from default versions");
+            } else {
+              error("Version '${version.substring(1)}' was not a default version");
+            }
+          }
+        } else if (version.isNotEmpty) {
+          if (ConfigManager.addDefaultVersion(version)) {
+            info("Version '$version' successfully added to default versions");
+          } else {
+            error("Version '$version' is already a default version");
+          }
+        }
+      } while (version.isNotEmpty);
 
       return;
     }

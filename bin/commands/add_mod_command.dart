@@ -5,7 +5,7 @@ import 'package:args/src/arg_results.dart';
 import '../adapters/host_adapter.dart';
 import '../config/config.dart';
 import '../config/data.dart';
-import '../enum_utils.dart';
+import '../util.dart';
 import '../log.dart';
 import 'scatter_command.dart';
 
