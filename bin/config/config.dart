@@ -8,8 +8,7 @@ import 'data.dart';
 typedef Deserializer<T> = T Function(Map<String, dynamic> json);
 
 class ConfigManager {
-
-  ConfigManager._ ();
+  ConfigManager._();
 
   static final Map<ConfigType, ConfigStore> _configs = {
     ConfigType.config: ConfigStore<Config>(Config([]), (json) => Config.fromJson(json), ConfigType.config),
@@ -78,6 +77,24 @@ class ConfigManager {
     return tokens[platform]!;
   }
 
+  // Import / Export
+
+  static String export() {
+    var exportData = {};
+    exportData["config"] = getConfigObject(ConfigType.config);
+    exportData["database"] = getConfigObject(ConfigType.database);
+
+    return encoder.convert(exportData);
+  }
+
+  static void import(String json) {
+    var exportData = jsonDecode(json);
+    _configs[ConfigType.config]!.deserialize(exportData["config"]);
+    _configs[ConfigType.database]!.deserialize(exportData["database"]);
+    save(ConfigType.config);
+    save(ConfigType.database);
+  }
+
   // Utility
 
   static String dumpConfig(ConfigType type) {
@@ -120,8 +137,12 @@ class ConfigStore<T> {
       file.createSync();
       file.writeAsStringSync(encoder.convert(data));
     } else {
-      data = deserializer(jsonDecode(file.readAsStringSync()));
+      deserialize(jsonDecode(file.readAsStringSync()));
     }
+  }
+
+  void deserialize(Map<String, dynamic> json) {
+    data = deserializer(json);
   }
 
   void save(JsonEncoder encoder) {
