@@ -96,15 +96,19 @@ class CurseForgeAdapter implements HostAdapter {
 
     debug("Request data: ${encoder.convert(json)}");
 
-    var request = MultipartRequest("POST", Uri.parse("$_url/api/projects/${mod.platform_ids["curseforge"]}/upload-file"));
+    var request = MultipartRequest("POST", Uri.parse("$_url/api/projects/${mod.platform_ids[getId()]}/upload-file"));
 
     request
       ..fields["metadata"] = jsonEncode(json)
       ..files.add(await MultipartFile.fromPath("file", spec.file.path, contentType: MediaType("application", "java-archive")))
-      ..headers["Authorization"] = ConfigManager.getToken(getId());
+      ..headers["X-Api-Token"] = ConfigManager.getToken(getId());
 
-    var result = await request.send();
-    return result.statusCode == 200;
+    var result = await client.send(request);
+    var success = result.statusCode == 200;
+
+    if (!success) error(await utf8.decodeStream(result.stream));
+
+    return success;
   }
 
   String _formatDependency(String type) {

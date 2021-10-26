@@ -48,15 +48,16 @@ class ModrinthAdapter implements HostAdapter {
     var json = <String, dynamic>{};
     var filename = basename(spec.file.path);
 
-    json["mod_id"] = mod.mod_id;
+    json["mod_id"] = mod.platform_ids[getId()];
     json["version_number"] = spec.version;
     json["file_parts"] = [filename];
 
-    json["versions_title"] = spec.name;
+    json["version_title"] = spec.name;
     json["version_body"] = spec.changelog;
     json["game_versions"] = spec.gameVersions;
     json["release_channel"] = getName(spec.type);
     json["loaders"] = [mod.modloader];
+    json["dependencies"] = [];
     json["featured"] = true;
 
     debug("Request data: ${encoder.convert(json)}");
@@ -68,8 +69,12 @@ class ModrinthAdapter implements HostAdapter {
       ..files.add(await MultipartFile.fromPath(filename, spec.file.path, contentType: MediaType("application", "java-archive")))
       ..headers["Authorization"] = ConfigManager.getToken(getId());
 
-    var result = await request.send();
-    return result.statusCode == 200;
+    var result = await client.send(request);
+    var success = result.statusCode == 200;
+
+    if (!success) error(await utf8.decodeStream(result.stream));
+
+    return success;
   }
 
   @override

@@ -101,7 +101,9 @@ class UploadCommand extends ScatterCommand {
       if (args.wasParsed("confirm") && !await ask("Upload to $platform")) continue;
 
       info("Uploading to $platform");
-      if (!await adapter.upload(mod, spec)) error("Unable to upload to $platform");
+      if (await adapter.upload(mod, spec)) {
+        info("Success");
+      }
     }
   }
 }
