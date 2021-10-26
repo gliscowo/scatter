@@ -5,8 +5,8 @@ import 'package:args/src/arg_results.dart';
 import '../adapters/host_adapter.dart';
 import '../config/config.dart';
 import '../config/data.dart';
-import '../util.dart';
 import '../log.dart';
+import '../util.dart';
 import 'scatter_command.dart';
 
 class AddCommand extends ScatterCommand {
@@ -34,7 +34,8 @@ class AddCommand extends ScatterCommand {
     String? artifactDirectory, artifactFilenamePattern;
     if (await ask("Add artifact location")) {
       artifactDirectory = await promptValidated("Artifact directory", isDirectory, invalidMessage: "This directory does not exist");
-      artifactFilenamePattern = await prompt("Artifact filename pattern");
+      artifactFilenamePattern = await promptValidated("Artifact filename pattern", (input) => input.contains("{}"),
+          invalidMessage: "Pattern must contain '{}' placeholder for version");
     }
 
     List<DependencyInfo> relations = [];

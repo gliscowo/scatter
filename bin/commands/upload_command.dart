@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:archive/archive_io.dart';
 import 'package:args/src/arg_results.dart';
+import 'package:path/path.dart';
 import 'package:toml/toml.dart';
 import 'package:version/version.dart';
 
@@ -29,13 +30,43 @@ class UploadCommand extends ScatterCommand {
 
   @override
   void execute(ArgResults args) async {
-    if (args.rest.length < 2) throw "Missing arguments. Usage: 'scatter upload <mod> <version or file>'";
+    if (args.rest.isEmpty) throw "Missing mod id. Usage: 'scatter upload <mod> [version]'";
 
     var mod = ConfigManager.getMod(args.rest[0]);
     if (mod == null) throw "Unknown mod id: '${args.rest[0]}'";
 
+    var uploadTarget;
+    if (args.rest.length < 2) {
+      if (!mod.artifactLocationDefined()) throw "No artifact location defined, artifact search is unavailable. Usage: 'scatter upload <mod> <version>'";
+
+      var namePattern = mod.artifact_filename_pattern;
+      var fileRegex = RegExp(namePattern!.replaceAll("{}", ".+\\"));
+
+      var artifactDir = Directory(mod.artifact_directory!);
+      var files = artifactDir
+          .listSync()
+          .where((element) => fileRegex.hasMatch(basename(element.path)) && !element.path.contains("dev") && !element.path.contains("sources"));
+
+      if (files.isEmpty) throw "No artifacts found";
+
+      var versions = files.map((e) => basename(e.path).replaceAll(namePattern.split("{}")[0], "").replaceAll(namePattern.split("{}")[1], "")).toList();
+
+      int idx = 0;
+      info("The following versions were found:");
+      for (var version in versions) {
+        print("[$idx] $version");
+        idx++;
+      }
+
+      var uploadIndex = int.parse(await prompt("Number of version to upload"));
+      if (uploadIndex > versions.length - 1) throw "Invalid version index";
+
+      uploadTarget = versions[uploadIndex];
+    } else {
+      uploadTarget = args.rest[1];
+    }
+
     File targetFile;
-    var uploadTarget = args.rest[1];
     if (mod.artifactLocationDefined() && !args.wasParsed("read-as-file")) {
       var targetFileLocation = "${mod.artifact_directory!}${mod.artifact_filename_pattern!.replaceAll("{}", uploadTarget)}";
       targetFile = File(targetFileLocation);
