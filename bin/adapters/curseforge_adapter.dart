@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:console/console.dart';
+import 'package:http/http.dart';
+import 'package:http_parser/http_parser.dart';
 
 import '../config/config.dart';
 import '../config/data.dart';
@@ -12,6 +14,7 @@ import 'host_adapter.dart';
 
 class CurseForgeAdapter implements HostAdapter {
   static const String _url = "https://minecraft.curseforge.com";
+  static final RegExp _snapshotRegex = RegExp("[0-9]{2}w[0-9]{2}[a-z]");
   static final CurseForgeAdapter instance = CurseForgeAdapter._();
 
   CurseForgeAdapter._();
@@ -49,9 +52,66 @@ class CurseForgeAdapter implements HostAdapter {
   }
 
   @override
-  FutureOr<bool> upload(ModInfo mod, UploadSpec spec) {
+  FutureOr<bool> upload(ModInfo mod, UploadSpec spec) async {
+    var json = <String, dynamic>{};
 
-    return true;
+    var response = await client.read(Uri.parse("$_url/api/game/versions"), headers: createTokenHeader());
+    var parsed = jsonDecode(response);
+    if (parsed is! List<dynamic>) throw "Invalid API response";
+
+    var mappedGameVersions = [];
+
+    for (var version in spec.gameVersions) {
+      if (!_snapshotRegex.hasMatch(version)) {
+        mappedGameVersions.add(version);
+        continue;
+      }
+
+      mappedGameVersions.add(await prompt("Enter CurseForge equivalent of snapshot version $version"));
+    }
+
+    var versions = <int>[];
+    for (var version in mappedGameVersions) {
+      try {
+        versions.add(parsed.firstWhere((element) => element["name"] == version)["id"]);
+      } catch (err) {
+        throw "Could not locate CurseForge mapping for version '$version'";
+      }
+    }
+
+    json["changelog"] = spec.changelog;
+    json["displayName"] = spec.name;
+    json["gameVersions"] = versions;
+    json["releaseType"] = getName(spec.type);
+
+    if (mod.relations.isNotEmpty) {
+      var relationsList = <Map<String, dynamic>>[];
+
+      for (var dependency in mod.relations) {
+        relationsList.add({"slug": dependency.slug, "type": _formatDependency(dependency.type)});
+      }
+
+      json["relations"] = {"projects": relationsList};
+    }
+
+    debug("Request data: ${encoder.convert(json)}");
+
+    var request = MultipartRequest("POST", Uri.parse("$_url/api/projects/${mod.platform_ids["curseforge"]}/upload-file"));
+
+    request
+      ..fields["metadata"] = jsonEncode(json)
+      ..files.add(await MultipartFile.fromPath("file", spec.file.path, contentType: MediaType("application", "java-archive")))
+      ..headers["Authorization"] = ConfigManager.getToken(getId());
+
+    var result = await request.send();
+    return result.statusCode == 200;
+  }
+
+  String _formatDependency(String type) {
+    if (type == "required") return "requiredDependency";
+    if (type == "embedded") return "embeddedLibrary";
+    if (type == "optional") return "optionalDependency";
+    throw "Unreachable";
   }
 
   @override

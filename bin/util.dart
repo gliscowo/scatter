@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:version/version.dart';
+
+const JsonEncoder encoder = JsonEncoder.withIndent("    ");
 
 enum Modloader { fabric, forge }
 
@@ -11,13 +14,15 @@ enum ReleaseType { alpha, beta, release }
 class UploadSpec {
   final File file;
 
-  final String version, description;
+  final String name;
+  
+  final String version, changelog;
 
   final ReleaseType type;
 
   final List<String> gameVersions;
 
-  UploadSpec(this.file, this.version, this.description, this.type, this.gameVersions);
+  UploadSpec(this.file, this.name, this.version, this.changelog, this.type, this.gameVersions);
 }
 
 bool Function(String) enumMatcher(List<Enum> enumValues) {

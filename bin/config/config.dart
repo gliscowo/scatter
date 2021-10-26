@@ -2,12 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import '../log.dart';
+import '../util.dart';
 import 'data.dart';
 
 typedef Deserializer<T> = T Function(Map<String, dynamic> json);
 
 class ConfigManager {
-  static const JsonEncoder _encoder = JsonEncoder.withIndent("    ");
 
   ConfigManager._ ();
 
@@ -21,7 +21,7 @@ class ConfigManager {
     Directory(_getConfigDirectory()).createSync(recursive: true);
 
     _configs.forEach((type, config) {
-      config.read(_encoder);
+      config.read(encoder);
     });
   }
 
@@ -81,7 +81,7 @@ class ConfigManager {
   // Utility
 
   static String dumpConfig(ConfigType type) {
-    return _encoder.convert(_configs[type]!.data);
+    return encoder.convert(_configs[type]!.data);
   }
 
   static String getConfigFile(ConfigType type) {
@@ -94,7 +94,7 @@ class ConfigManager {
   }
 
   static void save(ConfigType config) {
-    _configs[config]!.save(_encoder);
+    _configs[config]!.save(encoder);
   }
 
   static T getConfigObject<T>(ConfigType<T> type) {

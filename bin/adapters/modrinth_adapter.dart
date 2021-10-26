@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
 
-import 'package:version/version.dart';
+import 'package:http/http.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:path/path.dart';
 
+import '../config/config.dart';
 import '../config/data.dart';
 import '../log.dart';
 import '../scatter.dart';
@@ -41,27 +43,33 @@ class ModrinthAdapter implements HostAdapter {
     }
   }
 
-
   @override
-  FutureOr<bool> upload(ModInfo mod, UploadSpec spec) {
+  FutureOr<bool> upload(ModInfo mod, UploadSpec spec) async {
     var json = <String, dynamic>{};
+    var filename = basename(spec.file.path);
 
     json["mod_id"] = mod.mod_id;
     json["version_number"] = spec.version;
+    json["file_parts"] = [filename];
 
-    var gameVersion = spec.gameVersions.map(Version.parse);
-    var minGameVersion = gameVersion.reduce((value, element) => value < element ? value : element);
-
-    json["versions_title"] = "[${minGameVersion.toFancyString()}${gameVersion.length > 1 ? "+" : ""}] ${mod.display_name} - ${spec.version}";
-
-    json["version_body"] = spec.description;
+    json["versions_title"] = spec.name;
+    json["version_body"] = spec.changelog;
     json["game_versions"] = spec.gameVersions;
     json["release_channel"] = getName(spec.type);
     json["loaders"] = [mod.modloader];
+    json["featured"] = true;
 
-    print(JsonEncoder.withIndent("    ").convert(json));
+    debug("Request data: ${encoder.convert(json)}");
 
-    return false;
+    var request = MultipartRequest("POST", Uri.parse("$_url/api/v1/version"));
+
+    request
+      ..fields["data"] = jsonEncode(json)
+      ..files.add(await MultipartFile.fromPath(filename, spec.file.path, contentType: MediaType("application", "java-archive")))
+      ..headers["Authorization"] = ConfigManager.getToken(getId());
+
+    var result = await request.send();
+    return result.statusCode == 200;
   }
 
   @override
