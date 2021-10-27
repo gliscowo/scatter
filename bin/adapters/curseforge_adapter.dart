@@ -84,10 +84,10 @@ class CurseForgeAdapter implements HostAdapter {
     json["gameVersions"] = versions;
     json["releaseType"] = getName(spec.type);
 
-    if (mod.relations.isNotEmpty) {
+    if (spec.declaredRelations.isNotEmpty) {
       var relationsList = <Map<String, dynamic>>[];
 
-      for (var dependency in mod.relations) {
+      for (var dependency in spec.declaredRelations) {
         relationsList.add({"slug": dependency.slug, "type": _formatDependency(dependency.type)});
       }
 
@@ -106,7 +106,13 @@ class CurseForgeAdapter implements HostAdapter {
     var result = await client.send(request);
     var success = result.statusCode == 200;
 
-    if (!success) error(await utf8.decodeStream(result.stream));
+    var responseObject = jsonDecode(await utf8.decodeStream(result.stream));
+
+    if (success) {
+      info("CurseForge version created: https://www.curseforge.com/minecraft/mc-mods/${mod.mod_id}/files/${responseObject["id"]}");
+    } else {
+      error(responseObject);
+    }
 
     return success;
   }

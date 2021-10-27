@@ -5,6 +5,8 @@ import 'package:archive/archive.dart';
 import 'package:toml/toml.dart';
 import 'package:version/version.dart';
 
+import 'config/data.dart';
+
 const JsonEncoder encoder = JsonEncoder.withIndent("    ");
 
 enum Modloader { fabric, forge }
@@ -24,7 +26,9 @@ class UploadSpec {
 
   final List<String> gameVersions;
 
-  UploadSpec(this.file, this.name, this.version, this.changelog, this.type, this.gameVersions);
+  final List<DependencyInfo> declaredRelations;
+
+  UploadSpec(this.file, this.name, this.version, this.changelog, this.type, this.gameVersions, this.declaredRelations);
 }
 
 bool Function(String) enumMatcher(List<Enum> enumValues) {

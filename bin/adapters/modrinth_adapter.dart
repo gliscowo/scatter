@@ -72,7 +72,13 @@ class ModrinthAdapter implements HostAdapter {
     var result = await client.send(request);
     var success = result.statusCode == 200;
 
-    if (!success) error(await utf8.decodeStream(result.stream));
+    var responseObject = jsonDecode(await utf8.decodeStream(result.stream));
+    
+    if (success) {
+      info("Modrinth version created: https://modrinth.com/mod/${mod.mod_id}/version/${responseObject["id"]}");
+    } else {
+      error(responseObject);
+    }
 
     return success;
   }

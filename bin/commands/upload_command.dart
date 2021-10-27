@@ -24,6 +24,7 @@ class UploadCommand extends ScatterCommand {
     argParser.addFlag("read-as-file",
         abbr: "f", negatable: false, help: "Always interpret the second argument as a file, even if an artifact location is defined");
     argParser.addFlag("confirm", abbr: "c", negatable: false, help: "Whether uploading to each individual platform should be confirmed");
+    argParser.addFlag("confirm-relations", abbr: "r", negatable: false, help: "Ask for each dependency whether it should be declared");
   }
 
   @override
@@ -111,7 +112,17 @@ class UploadCommand extends ScatterCommand {
     var displayVersion = Version(parsedVersion.major, parsedVersion.minor, parsedVersion.patch);
 
     var versionName = "[$minRequiredGameVersion${parsedGameVersions.length > 1 ? "+" : ""}] ${mod.display_name} - $displayVersion";
-    var spec = UploadSpec(targetFile, versionName, artifactVersion, desc, type, gameVersions);
+
+    var relations = List.of(mod.relations);
+
+    if (args.wasParsed("confirm-relations")) {
+      for (var dep in mod.relations) {
+        if (await ask("Declare dependency '${dep.slug}'")) continue;
+        relations.remove(dep);
+      }
+    }
+
+    var spec = UploadSpec(targetFile, versionName, artifactVersion, desc, type, gameVersions, relations);
 
     info("A build with following metadata will be published");
     printKeyValuePair("Name", versionName, 15);
@@ -126,9 +137,7 @@ class UploadCommand extends ScatterCommand {
       if (args.wasParsed("confirm") && !await ask("Upload to $platform")) continue;
 
       info("Uploading to $platform");
-      if (await adapter.upload(mod, spec)) {
-        info("Success");
-      }
+      await adapter.upload(mod, spec);
     }
   }
 }

@@ -22,7 +22,7 @@ void main(List<String> args) async {
   Console.init();
 
   var runner = CommandRunner("scatter", "Scatter mod distribution utility");
-  runner.argParser.addFlag("verbose", negatable: false);
+  runner.argParser.addFlag("verbose", negatable: false, abbr: "v", help: "Print additional debug output");
   runner.argParser.addFlag("version", negatable: false, help: "Print the version and exit");
 
   runner.addCommand(AddCommand());
