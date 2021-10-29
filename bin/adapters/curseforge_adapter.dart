@@ -70,6 +70,7 @@ class CurseForgeAdapter implements HostAdapter {
       mappedGameVersions.add(await prompt("Enter CurseForge equivalent of snapshot version $version"));
     }
 
+    mappedGameVersions.add(mod.modloader.replaceFirst("f", "F"));
     var versions = <int>[];
     for (var version in mappedGameVersions) {
       try {
