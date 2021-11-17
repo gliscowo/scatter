@@ -3,14 +3,16 @@ import 'dart:async';
 import '../config/data.dart';
 import '../util.dart';
 import 'curseforge_adapter.dart';
+import 'github_adapter.dart';
 import 'modrinth_adapter.dart';
 
 abstract class HostAdapter {
-  static const List<String> platforms = ["Modrinth", "CurseForge"];
+  static const List<String> platforms = ["Modrinth", "CurseForge", "GitHub"];
 
   factory HostAdapter(String platform) {
     if (platform == "modrinth") return ModrinthAdapter.instance;
     if (platform == "curseforge") return CurseForgeAdapter.instance;
+    if (platform == "github") return GitHubAdapter.instance;
     throw "Unknown host platform";
   }
 

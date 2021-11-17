@@ -8,7 +8,7 @@ import 'scatter.dart';
 const Color questionColor = Color.BLUE;
 const Color promptColor = Color.LIGHT_CYAN;
 const Color keyColor = Color.BLUE;
-const Color valueColor = Color.GRAY;
+const Color valueColor = Color.LIGHT_GRAY;
 
 typedef ResponseValidator = FutureOr<bool> Function(String);
 
@@ -49,7 +49,7 @@ Future<bool> ask(String question) async {
   questionColor.makeCurrent();
   var future = Prompter("$question? ").ask();
 
-  Color.GRAY.makeCurrent();
+  Color.LIGHT_GRAY.makeCurrent();
   stdout.write("[Y/n] ");
 
   Console.resetAll();

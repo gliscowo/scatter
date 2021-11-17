@@ -55,11 +55,10 @@ class UploadCommand extends ScatterCommand {
 
       var versions = files.map((e) => basename(e.path).replaceAll(namePattern.split("{}")[0], "").replaceAll(namePattern.split("{}")[1], "")).toList();
 
-      int idx = 0;
       info("The following versions were found:");
-      for (var version in versions) {
-        print("[$idx] $version (${extractVersion(zipDecoder.decodeBytes(files[idx].readAsBytesSync()), modloader)})");
-        idx++;
+
+      for (int idx = 0; idx < versions.length; idx++) {
+        print("[$idx] ${versions[idx]} (${extractVersion(zipDecoder.decodeBytes(files[idx].readAsBytesSync()), modloader)})");
       }
 
       var uploadIndex = int.parse(await prompt("Number of version to upload"));
