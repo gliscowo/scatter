@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart';
-import 'package:http_parser/http_parser.dart';
 import 'package:path/path.dart';
 import 'package:uri/uri.dart';
 
@@ -44,11 +43,18 @@ class GitHubAdapter implements HostAdapter {
     debug(createResponse);
 
     var uploadUrl = UriTemplate(createResponse["upload_url"]).expand({"name": basename(spec.file.path)});
-    var uploadRequest = MultipartRequest("POST", Uri.parse(uploadUrl));
+    var uploadRequest = Request("POST", Uri.parse(uploadUrl));
+
+    debug("Creating upload request");
 
     uploadRequest
       ..headers["Authorization"] = "token ${ConfigManager.getToken(getId())}"
-      ..files.add(await MultipartFile.fromPath("file", spec.file.path, contentType: MediaType("application", "java-archive")));
+      ..headers["Content-Type"] = "application/java-archive"
+      ..headers["Content-Length"] = spec.file.lengthSync().toString();
+
+    debug("Reading artifact bytes");
+
+    uploadRequest.bodyBytes = spec.file.readAsBytesSync();
 
     debug("Uploading artifact");
 
