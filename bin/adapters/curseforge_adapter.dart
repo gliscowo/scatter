@@ -14,7 +14,7 @@ import 'host_adapter.dart';
 
 class CurseForgeAdapter implements HostAdapter {
   static const String _url = "https://minecraft.curseforge.com";
-  static final RegExp _snapshotRegex = RegExp("([0-9]{2}w[0-9]{2}[a-z])|(.+-pre[0-9])");
+  static final RegExp _snapshotRegex = RegExp("([0-9]{2}w[0-9]{2}[a-z])|(.+-(pre|rc)[0-9])");
   static final CurseForgeAdapter instance = CurseForgeAdapter._();
 
   CurseForgeAdapter._();
