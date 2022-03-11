@@ -4,8 +4,8 @@ import 'package:console/console.dart';
 import '../adapters/host_adapter.dart';
 import '../config/config.dart';
 import '../config/data.dart';
-import '../util.dart';
 import '../log.dart';
+import '../util.dart';
 import 'scatter_command.dart';
 
 class EditCommand extends ScatterCommand {
@@ -58,7 +58,7 @@ class EditCommand extends ScatterCommand {
 
             if (!enumMatcher(DependencyType.values)(type)) throw "Invalid dependency type";
 
-            mod.relations.add(DependencyInfo(slug, type));
+            mod.relations.add(DependencyInfo.simple(slug, type));
             info("'$slug' added as '$type' dependency");
           } else if (args[0] == "remove") {
             if (args.length < 2) throw "Missing arguments. Usage: 'depmod remove <slug>'";
@@ -98,7 +98,7 @@ class EditCommand extends ScatterCommand {
 
             mod.modloader = args[1];
             info("Modloader changed to '${args[1]}'");
-          }  else if (args[0] == "platform_id") {
+          } else if (args[0] == "platform_id") {
             if (args.length < 3) throw "Missing ${args.length < 2 ? "platform and " : ""}id to set";
 
             var platform = args[1];

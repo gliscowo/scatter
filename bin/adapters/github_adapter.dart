@@ -37,9 +37,10 @@ class GitHubAdapter implements HostAdapter {
     var target = await prompt("Git tag target (empty for HEAD)");
     if (target.isNotEmpty) data["target_commitish"] = target;
 
-    debug("Creating release");
+    debug("Creating release at '$createUrl'");
 
-    var createResponse = jsonDecode((await client.post(createUrl, headers: createHeaders(), body: jsonEncode(data))).body);
+    var createResponse =
+        jsonDecode((await client.post(createUrl, headers: createHeaders(), body: jsonEncode(data))).body);
     debug(createResponse);
 
     var uploadUrl = UriTemplate(createResponse["upload_url"]).expand({"name": basename(spec.file.path)});
@@ -48,7 +49,7 @@ class GitHubAdapter implements HostAdapter {
     debug("Creating upload request");
 
     uploadRequest
-      ..headers["Authorization"] = "token ${ConfigManager.getToken(getId())}"
+      ..headers["Authorization"] = "token ${ConfigManager.getToken(id)}"
       ..headers["Content-Type"] = "application/java-archive"
       ..headers["Content-Length"] = spec.file.lengthSync().toString();
 
@@ -78,9 +79,9 @@ class GitHubAdapter implements HostAdapter {
   static String _url([String sub = ""]) => _urlPattern.replaceFirst("{}", sub.isEmpty ? "" : "$sub.");
 
   Map<String, String> createHeaders() {
-    return {"Authorization": "token ${ConfigManager.getToken(getId())}", "Accept": "application/vnd.github.v3+json"};
+    return {"Authorization": "token ${ConfigManager.getToken(id)}", "Accept": "application/vnd.github.v3+json"};
   }
 
   @override
-  String getId() => "github";
+  String get id => "github";
 }

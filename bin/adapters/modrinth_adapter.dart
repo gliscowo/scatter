@@ -32,7 +32,6 @@ class ModrinthAdapter implements HostAdapter {
   Future<bool> isProject(String id) async {
     try {
       var response = await client.get(Uri.parse("$_url/api/v1/mod/$id"));
-
       debug("Response status: ${response.statusCode}");
       debug("Response body: ${response.body.length > 300 ? "<truncated>" : response.body}");
 
@@ -48,7 +47,7 @@ class ModrinthAdapter implements HostAdapter {
     var json = <String, dynamic>{};
     var filename = basename(spec.file.path);
 
-    json["mod_id"] = mod.platform_ids[getId()];
+    json["mod_id"] = mod.platform_ids[id];
     json["version_number"] = spec.version;
     json["file_parts"] = [filename];
 
@@ -66,14 +65,15 @@ class ModrinthAdapter implements HostAdapter {
 
     request
       ..fields["data"] = jsonEncode(json)
-      ..files.add(await MultipartFile.fromPath(filename, spec.file.path, contentType: MediaType("application", "java-archive")))
-      ..headers["Authorization"] = ConfigManager.getToken(getId());
+      ..files.add(
+          await MultipartFile.fromPath(filename, spec.file.path, contentType: MediaType("application", "java-archive")))
+      ..headers["Authorization"] = ConfigManager.getToken(id);
 
     var result = await client.send(request);
     var success = result.statusCode == 200;
 
     var responseObject = jsonDecode(await utf8.decodeStream(result.stream));
-    
+
     if (success) {
       info("Modrinth version created: https://modrinth.com/mod/${mod.mod_id}/version/${responseObject["id"]}");
     } else {
@@ -83,6 +83,17 @@ class ModrinthAdapter implements HostAdapter {
     return success;
   }
 
+  Future<String?> getIdFromSlug(String slug) async {
+    final response = await client.get(Uri.parse("$_url/v2/project/$slug"));
+    if (response.statusCode == 404) return null;
+
+    final parsed = jsonDecode(response.body);
+    if (parsed is! Map<String, dynamic>) throw "Invalid API response";
+
+    debug("Slug query response: $parsed");
+    return parsed["id"] as String;
+  }
+
   @override
-  String getId() => "modrinth";
+  String get id => "modrinth";
 }

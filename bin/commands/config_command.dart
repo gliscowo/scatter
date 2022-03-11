@@ -17,7 +17,8 @@ class ConfigCommand extends ScatterCommand {
   ConfigCommand() {
     argParser.addOption("dump", help: "Dumps the entire config file to the console");
     argParser.addOption("set-token", help: "Set the token for the given platform");
-    argParser.addFlag("default-versions", help: "Change the default versions all uploaded files are marked compatible with", negatable: false);
+    argParser.addFlag("default-versions",
+        help: "Change the default versions all uploaded files are marked compatible with", negatable: false);
     argParser.addFlag("export", help: "Export scatter's configuration", negatable: false);
     argParser.addOption("import", help: "Import a config export from the given file");
   }
@@ -51,11 +52,11 @@ class ConfigCommand extends ScatterCommand {
       print("");
 
       if (token.trim().isEmpty) {
-        ConfigManager.setToken(platform.getId(), null);
-        info("Token for platform '${platform.getId()}' removed", frame: true);
+        ConfigManager.setToken(platform.id, null);
+        info("Token for platform '${platform.id}' removed", frame: true);
       } else {
-        ConfigManager.setToken(platform.getId(), token);
-        info("Token for platform '${platform.getId()}' updated", frame: true);
+        ConfigManager.setToken(platform.id, token);
+        info("Token for platform '${platform.id}' updated", frame: true);
       }
 
       return;

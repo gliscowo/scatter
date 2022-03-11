@@ -60,10 +60,15 @@ DependencyInfo _$DependencyInfoFromJson(Map<String, dynamic> json) =>
     DependencyInfo(
       json['slug'] as String,
       json['type'] as String,
+      (json['platform_ids'] as Map<String, dynamic>?)?.map(
+            (k, e) => MapEntry(k, e as String),
+          ) ??
+          {},
     );
 
 Map<String, dynamic> _$DependencyInfoToJson(DependencyInfo instance) =>
     <String, dynamic>{
       'slug': instance.slug,
       'type': instance.type,
+      'platform_ids': instance.platform_ids,
     };

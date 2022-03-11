@@ -16,7 +16,7 @@ abstract class HostAdapter {
     throw "Unknown host platform";
   }
 
-  String getId();
+  String get id;
 
   FutureOr<List<String>> listVersions();
 

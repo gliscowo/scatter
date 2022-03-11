@@ -2,6 +2,8 @@
 
 import 'package:json_annotation/json_annotation.dart';
 
+import '../adapters/curseforge_adapter.dart';
+import '../adapters/modrinth_adapter.dart';
 import '../log.dart';
 
 part 'data.g.dart';
@@ -51,7 +53,8 @@ class ModInfo {
 
   final List<DependencyInfo> relations;
 
-  ModInfo(this.display_name, this.mod_id, this.modloader, this.platform_ids, this.relations, this.artifact_directory, this.artifact_filename_pattern);
+  ModInfo(this.display_name, this.mod_id, this.modloader, this.platform_ids, this.relations, this.artifact_directory,
+      this.artifact_filename_pattern);
 
   factory ModInfo.fromJson(Map<String, dynamic> json) => _$ModInfoFromJson(json);
 
@@ -76,6 +79,7 @@ class ModInfo {
       for (var info in relations) {
         printKeyValuePair("  Slug", info.slug);
         printKeyValuePair("  Type", info.type);
+        printKeyValuePair("  Modrinth ID", info.project_ids[ModrinthAdapter.instance.id]);
         print("");
       }
     }
@@ -86,7 +90,18 @@ class ModInfo {
 class DependencyInfo {
   String slug, type;
 
-  DependencyInfo(this.slug, this.type);
+  @JsonKey(defaultValue: <String, String>{})
+  Map<String, String>? platform_ids = {};
+  Map<String, String> get project_ids => platform_ids!;
+
+  DependencyInfo(this.slug, this.type, this.platform_ids) {
+    if (project_ids.isNotEmpty) return;
+    project_ids[CurseForgeAdapter.instance.id] = slug;
+  }
+
+  DependencyInfo.simple(this.slug, this.type) {
+    project_ids[CurseForgeAdapter.instance.id] = slug;
+  }
 
   factory DependencyInfo.fromJson(Map<String, dynamic> json) => _$DependencyInfoFromJson(json);
 

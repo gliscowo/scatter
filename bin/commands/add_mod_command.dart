@@ -22,18 +22,21 @@ class AddCommand extends ScatterCommand {
 
     var modId = args.rest[0];
 
-    if (ConfigManager.getMod(modId) != null) throw "A mod with id '$modId' already exists in the database. Did you mean 'scatter edit $modId'?";
+    if (ConfigManager.getMod(modId) != null)
+      throw "A mod with id '$modId' already exists in the database. Did you mean 'scatter edit $modId'?";
 
     info("Adding a new mod with id '$modId' to the database", frame: true);
 
     var displayName = await prompt("Display Name");
-    var modloader = await promptValidated("Modloader", enumMatcher(Modloader.values), invalidMessage: "Unknown modloader");
+    var modloader =
+        await promptValidated("Modloader", enumMatcher(Modloader.values), invalidMessage: "Unknown modloader");
 
     Map<String, String> platformIds = await promptPlatformIds();
 
     String? artifactDirectory, artifactFilenamePattern;
     if (await ask("Add artifact location")) {
-      artifactDirectory = await promptValidated("Artifact directory", isDirectory, invalidMessage: "This directory does not exist");
+      artifactDirectory =
+          await promptValidated("Artifact directory", isDirectory, invalidMessage: "This directory does not exist");
       artifactFilenamePattern = await promptValidated("Artifact filename pattern", (input) => input.contains("{}"),
           invalidMessage: "Pattern must contain '{}' placeholder for version");
     }
@@ -44,12 +47,14 @@ class AddCommand extends ScatterCommand {
       do {
         info("Adding dependency");
         slug = await prompt("Slug");
-        type = await promptValidated("Type for dependency '$slug'", enumMatcher(DependencyType.values), invalidMessage: "Unknown dependency type");
-        relations.add(DependencyInfo(slug, type));
+        type = await promptValidated("Type for dependency '$slug'", enumMatcher(DependencyType.values),
+            invalidMessage: "Unknown dependency type");
+        relations.add(DependencyInfo.simple(slug, type));
       } while (await ask("'$slug' added as '$type' dependency. Add more"));
     }
 
-    var modInfo = ModInfo(displayName, modId, modloader, platformIds, relations, artifactDirectory, artifactFilenamePattern);
+    var modInfo =
+        ModInfo(displayName, modId, modloader, platformIds, relations, artifactDirectory, artifactFilenamePattern);
 
     info("A mod with the following information will be added to the database", frame: true);
 

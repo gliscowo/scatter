@@ -30,7 +30,8 @@ class CurseForgeAdapter implements HostAdapter {
 
     for (Map<String, dynamic> version in parsed) {
       if (version["gameVersionTypeID"] == 3 || version["gameVersionTypeID"] == 73247) continue;
-      results.add("${Color.WHITE}Name: ${Color.DARK_BLUE}${version["name"]} ${Color.GRAY}| ${Color.WHITE}Slug: ${Color.DARK_BLUE}${version["slug"]}");
+      results.add(
+          "${Color.WHITE}Name: ${Color.DARK_BLUE}${version["name"]} ${Color.GRAY}| ${Color.WHITE}Slug: ${Color.DARK_BLUE}${version["slug"]}");
     }
 
     return results;
@@ -39,7 +40,8 @@ class CurseForgeAdapter implements HostAdapter {
   @override
   FutureOr<bool> isProject(String id) async {
     try {
-      var response = await client.get(Uri.parse("$_url/api/projects/$id/localization/export"), headers: createTokenHeader());
+      var response =
+          await client.get(Uri.parse("$_url/api/projects/$id/localization/export"), headers: createTokenHeader());
 
       debug("Response status: ${response.statusCode}");
       debug("Response body: ${response.body.length > 300 ? "<truncated>" : response.body}");
@@ -97,12 +99,13 @@ class CurseForgeAdapter implements HostAdapter {
 
     debug("Request data: ${encoder.convert(json)}");
 
-    var request = MultipartRequest("POST", Uri.parse("$_url/api/projects/${mod.platform_ids[getId()]}/upload-file"));
+    var request = MultipartRequest("POST", Uri.parse("$_url/api/projects/${mod.platform_ids[id]}/upload-file"));
 
     request
       ..fields["metadata"] = jsonEncode(json)
-      ..files.add(await MultipartFile.fromPath("file", spec.file.path, contentType: MediaType("application", "java-archive")))
-      ..headers["X-Api-Token"] = ConfigManager.getToken(getId());
+      ..files.add(
+          await MultipartFile.fromPath("file", spec.file.path, contentType: MediaType("application", "java-archive")))
+      ..headers["X-Api-Token"] = ConfigManager.getToken(id);
 
     var result = await client.send(request);
     var success = result.statusCode == 200;
@@ -110,7 +113,8 @@ class CurseForgeAdapter implements HostAdapter {
     var responseObject = jsonDecode(await utf8.decodeStream(result.stream));
 
     if (success) {
-      info("CurseForge version created: https://www.curseforge.com/minecraft/mc-mods/${mod.mod_id}/files/${responseObject["id"]}");
+      info(
+          "CurseForge version created: https://www.curseforge.com/minecraft/mc-mods/${mod.mod_id}/files/${responseObject["id"]}");
     } else {
       error(responseObject);
     }
@@ -126,9 +130,9 @@ class CurseForgeAdapter implements HostAdapter {
   }
 
   @override
-  String getId() => "curseforge";
+  String get id => "curseforge";
 
   Map<String, String> createTokenHeader() {
-    return {"X-Api-Token": ConfigManager.getToken(getId())};
+    return {"X-Api-Token": ConfigManager.getToken(id)};
   }
 }

@@ -9,6 +9,7 @@ import 'commands/config_command.dart';
 import 'commands/edit_mod_command.dart';
 import 'commands/list_game_versions_command.dart';
 import 'commands/list_mods_command.dart';
+import 'commands/migrate_command.dart';
 import 'commands/mod_info_command.dart';
 import 'commands/remove_mod_command.dart';
 import 'commands/upload_command.dart';
@@ -35,6 +36,7 @@ void main(List<String> args) async {
   runner.addCommand(EditCommand());
   runner.addCommand(ListGameVersionsCommand());
   runner.addCommand(ListModsCommand());
+  runner.addCommand(MigrateCommand());
 
   try {
     var parseResults = runner.parse(args);
