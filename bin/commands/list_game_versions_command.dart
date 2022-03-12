@@ -23,7 +23,7 @@ class ListGameVersionsCommand extends ScatterCommand {
     }
 
     try {
-      var adapter = HostAdapter(args.rest[0]);
+      var adapter = HostAdapter.fromId(args.rest[0]);
       var versions = await adapter.listVersions();
 
       if (args.wasParsed("filter")) versions.removeWhere((element) => !element.contains(args["filter"]));

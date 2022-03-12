@@ -12,7 +12,7 @@ import '../scatter.dart';
 import '../util.dart';
 import 'host_adapter.dart';
 
-class CurseForgeAdapter implements HostAdapter {
+class CurseForgeAdapter extends HostAdapter {
   static const String _url = "https://minecraft.curseforge.com";
   static final RegExp _snapshotRegex = RegExp("([0-9]{2}w[0-9]{2}[a-z])|(.+-(pre|rc)[0-9])");
   static final CurseForgeAdapter instance = CurseForgeAdapter._();

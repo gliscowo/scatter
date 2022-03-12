@@ -49,6 +49,12 @@ class ConfigManager {
     return getConfigObject(ConfigType.database).mods[modId];
   }
 
+  static ModInfo requireMod(String modId) {
+    final mod = getMod(modId);
+    if (mod == null) throw "No mod with id '$modId' found in database";
+    return mod;
+  }
+
   static void storeMod(ModInfo info) {
     getConfigObject(ConfigType.database).mods[info.mod_id] = info;
     save(ConfigType.database);
@@ -73,7 +79,8 @@ class ConfigManager {
 
   static String getToken(String platform) {
     var tokens = getConfigObject(ConfigType.tokens).tokens;
-    if (!tokens.containsKey(platform)) throw "No token saved for platform '$platform'. Use 'scatter config --set-token $platform'";
+    if (!tokens.containsKey(platform))
+      throw "No token saved for platform '$platform'. Use 'scatter config --set-token $platform'";
     return tokens[platform]!;
   }
 

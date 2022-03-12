@@ -20,9 +20,7 @@ class EditCommand extends ScatterCommand {
     if (args.rest.isEmpty) throw "No mod id provided";
 
     var modId = args.rest[0];
-    var mod = ConfigManager.getMod(modId);
-
-    if (mod == null) throw "No mod with id '$modId' found in database";
+    var mod = ConfigManager.requireMod(modId);
 
     info("Editing mod '${mod.display_name}'");
     info("Type 'done' to exit and save changes, 'save' to save changes");
@@ -104,7 +102,7 @@ class EditCommand extends ScatterCommand {
             var platform = args[1];
             var id = args[2];
 
-            HostAdapter(platform);
+            HostAdapter.fromId(platform);
 
             mod.platform_ids[platform] = id;
 

@@ -12,7 +12,7 @@ import '../scatter.dart';
 import '../util.dart';
 import 'host_adapter.dart';
 
-class ModrinthAdapter implements HostAdapter {
+class ModrinthAdapter extends HostAdapter {
   static const String _url = "https://api.modrinth.com";
   static final ModrinthAdapter instance = ModrinthAdapter._();
 
@@ -92,6 +92,28 @@ class ModrinthAdapter implements HostAdapter {
 
     debug("Slug query response: $parsed");
     return parsed["id"] as String;
+  }
+
+  Future<String?> projectIdFromVersion(String versionId) async {
+    final response = await client.get(resolve("version/$versionId"));
+    if (response.statusCode != 200) return null;
+
+    final parsed = jsonDecode(response.body);
+    if (parsed is! Map<String, dynamic>) throw "Invalid API response";
+
+    return parsed["project_id"];
+  }
+
+  Future<dynamic> fetchUnchecked(String route) async {
+    return await jsonDecode(await client.read(Uri.parse("$_url/v2/$route")));
+  }
+
+  Uri resolve(String route) {
+    return Uri.parse("$_url/v2/$route");
+  }
+
+  Map<String, String> authHeader() {
+    return {"Authorization": ConfigManager.getToken(id)};
   }
 
   @override

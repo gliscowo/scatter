@@ -75,7 +75,8 @@ class AddCommand extends ScatterCommand {
     do {
       for (var platform in HostAdapter.platforms) {
         var platformId = platform.toLowerCase();
-        var response = await promptValidated("$platform Project Id (empty to skip)", HostAdapter(platformId).isProject,
+        var response = await promptValidated(
+            "$platform Project Id (empty to skip)", HostAdapter.fromId(platformId).isProject,
             invalidMessage: "Invalid project id", emptyIsValid: true);
         if (response.trim().isEmpty) continue;
         platformIds[platformId] = response;

@@ -20,11 +20,16 @@ class UploadCommand extends ScatterCommand {
   final String name = "upload";
 
   UploadCommand() {
-    argParser.addFlag("override-game-versions", abbr: "o", negatable: false, help: "Prompt which game versions to use instead of using the default ones");
+    argParser.addFlag("override-game-versions",
+        abbr: "o", negatable: false, help: "Prompt which game versions to use instead of using the default ones");
     argParser.addFlag("read-as-file",
-        abbr: "f", negatable: false, help: "Always interpret the second argument as a file, even if an artifact location is defined");
-    argParser.addFlag("confirm", abbr: "c", negatable: false, help: "Whether uploading to each individual platform should be confirmed");
-    argParser.addFlag("confirm-relations", abbr: "r", negatable: false, help: "Ask for each dependency whether it should be declared");
+        abbr: "f",
+        negatable: false,
+        help: "Always interpret the second argument as a file, even if an artifact location is defined");
+    argParser.addFlag("confirm",
+        abbr: "c", negatable: false, help: "Whether uploading to each individual platform should be confirmed");
+    argParser.addFlag("confirm-relations",
+        abbr: "r", negatable: false, help: "Ask for each dependency whether it should be declared");
   }
 
   @override
@@ -39,7 +44,8 @@ class UploadCommand extends ScatterCommand {
 
     String uploadTarget;
     if (args.rest.length < 2) {
-      if (!mod.artifactLocationDefined()) throw "No artifact location defined, artifact search is unavailable. Usage: 'scatter upload <mod> <version>'";
+      if (!mod.artifactLocationDefined())
+        throw "No artifact location defined, artifact search is unavailable. Usage: 'scatter upload <mod> <version>'";
 
       var namePattern = mod.artifact_filename_pattern;
       var fileRegex = RegExp(namePattern!.replaceAll("{}", ".+\\"));
@@ -48,17 +54,24 @@ class UploadCommand extends ScatterCommand {
       var files = artifactDir
           .listSync()
           .whereType<File>()
-          .where((element) => fileRegex.hasMatch(basename(element.path)) && !element.path.contains("dev") && !element.path.contains("sources"))
+          .where((element) =>
+              fileRegex.hasMatch(basename(element.path)) &&
+              !element.path.contains("dev") &&
+              !element.path.contains("sources"))
           .toList();
 
       if (files.isEmpty) throw "No artifacts found";
 
-      var versions = files.map((e) => basename(e.path).replaceAll(namePattern.split("{}")[0], "").replaceAll(namePattern.split("{}")[1], "")).toList();
+      var versions = files
+          .map((e) =>
+              basename(e.path).replaceAll(namePattern.split("{}")[0], "").replaceAll(namePattern.split("{}")[1], ""))
+          .toList();
 
       info("The following versions were found:");
 
       for (int idx = 0; idx < versions.length; idx++) {
-        print("[$idx] ${versions[idx]} (${extractVersion(zipDecoder.decodeBytes(files[idx].readAsBytesSync()), modloader)})");
+        print(
+            "[$idx] ${versions[idx]} (${extractVersion(zipDecoder.decodeBytes(files[idx].readAsBytesSync()), modloader)})");
       }
 
       var uploadIndex = int.parse(await prompt("Number of version to upload"));
@@ -71,7 +84,8 @@ class UploadCommand extends ScatterCommand {
 
     File targetFile;
     if (mod.artifactLocationDefined() && !args.wasParsed("read-as-file")) {
-      var targetFileLocation = "${mod.artifact_directory!}${mod.artifact_filename_pattern!.replaceAll("{}", uploadTarget)}";
+      var targetFileLocation =
+          "${mod.artifact_directory!}${mod.artifact_filename_pattern!.replaceAll("{}", uploadTarget)}";
       targetFile = File(targetFileLocation);
     } else {
       targetFile = File(uploadTarget);
@@ -80,7 +94,8 @@ class UploadCommand extends ScatterCommand {
     if (!targetFile.existsSync()) throw "Unable to find artifact file: '${targetFile.path}'";
 
     var desc = await prompt("Changelog");
-    var type = getEnum(ReleaseType.values, await promptValidated("Release Type", enumMatcher(ReleaseType.values), invalidMessage: "Invalid release type"));
+    var type = getEnum(ReleaseType.values,
+        await promptValidated("Release Type", enumMatcher(ReleaseType.values), invalidMessage: "Invalid release type"));
 
     var gameVersions = ConfigManager.getDefaultVersions();
     if (args.wasParsed("override-game-versions")) {
@@ -110,7 +125,8 @@ class UploadCommand extends ScatterCommand {
     var parsedVersion = Version.parse(artifactVersion);
     var displayVersion = Version(parsedVersion.major, parsedVersion.minor, parsedVersion.patch);
 
-    var versionName = "[$minRequiredGameVersion${parsedGameVersions.length > 1 ? "+" : ""}] ${mod.display_name} - $displayVersion";
+    var versionName =
+        "[$minRequiredGameVersion${parsedGameVersions.length > 1 ? "+" : ""}] ${mod.display_name} - $displayVersion";
 
     var relations = List.of(mod.relations);
 
@@ -132,7 +148,7 @@ class UploadCommand extends ScatterCommand {
     for (var platform in HostAdapter.platforms) {
       if (!mod.platform_ids.keys.contains(platform.toLowerCase())) continue;
 
-      var adapter = HostAdapter(platform.toLowerCase());
+      var adapter = HostAdapter.fromId(platform.toLowerCase());
       if (args.wasParsed("confirm") && !await ask("Upload to $platform")) continue;
 
       info("Uploading to $platform");

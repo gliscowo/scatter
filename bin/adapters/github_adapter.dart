@@ -12,7 +12,7 @@ import '../scatter.dart';
 import '../util.dart';
 import 'host_adapter.dart';
 
-class GitHubAdapter implements HostAdapter {
+class GitHubAdapter extends HostAdapter {
   static const String _urlPattern = "https://{}github.com";
   static final GitHubAdapter instance = GitHubAdapter._();
 

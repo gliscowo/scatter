@@ -47,7 +47,7 @@ class ConfigCommand extends ScatterCommand {
       info("Config imported");
       return;
     } else if (args.wasParsed("set-token")) {
-      var platform = HostAdapter(args["set-token"]);
+      var platform = HostAdapter.fromId(args["set-token"]);
       var token = await prompt("Token (empty to remove)", secret: true);
       print("");
 
