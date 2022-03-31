@@ -30,6 +30,7 @@ class UploadCommand extends ScatterCommand {
         abbr: "c", negatable: false, help: "Whether uploading to each individual platform should be confirmed");
     argParser.addFlag("confirm-relations",
         abbr: "r", negatable: false, help: "Ask for each dependency whether it should be declared");
+    argParser.addOption("changelog-file", help: "Read the changelog from the given file", abbr: "l");
   }
 
   @override
@@ -44,8 +45,9 @@ class UploadCommand extends ScatterCommand {
 
     String uploadTarget;
     if (args.rest.length < 2) {
-      if (!mod.artifactLocationDefined())
+      if (!mod.artifactLocationDefined()) {
         throw "No artifact location defined, artifact search is unavailable. Usage: 'scatter upload <mod> <version>'";
+      }
 
       var namePattern = mod.artifact_filename_pattern;
       var fileRegex = RegExp(namePattern!.replaceAll("{}", ".+\\"));
@@ -93,7 +95,13 @@ class UploadCommand extends ScatterCommand {
 
     if (!targetFile.existsSync()) throw "Unable to find artifact file: '${targetFile.path}'";
 
-    var desc = await prompt("Changelog");
+    final String desc;
+    if (args.wasParsed("changelog-file")) {
+      desc = File(args["changelog-file"]).readAsStringSync();
+    } else {
+      desc = await prompt("Changelog");
+    }
+
     var type = getEnum(ReleaseType.values,
         await promptValidated("Release Type", enumMatcher(ReleaseType.values), invalidMessage: "Invalid release type"));
 
@@ -115,6 +123,7 @@ class UploadCommand extends ScatterCommand {
     for (var version in gameVersions) {
       try {
         parsedGameVersions.add(Version.parse(version));
+        // ignore: empty_catches
       } catch (err) {}
     }
 
