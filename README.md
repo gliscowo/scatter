@@ -5,7 +5,7 @@ scatter is a command line tool for uploading Minecraft mods to distribution plat
 ### Installation
 
 scatter is written in Dart, meaning you require the Dart SDK to build it. You can either install that or 
-download one of the precompiled scatter binaries from the releases section
+download one of the precompiled scatter binaries from the [Actions](https://github.com/gliscowo/scatter-dart/actions) section
 
 To compile scatter, execute the following commands from the root of this repository
 
