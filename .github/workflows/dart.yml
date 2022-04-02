@@ -1,0 +1,29 @@
+name: Dart Build
+
+on: [pull_request, push]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        sdk: [stable]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ matrix.sdk }}
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Compile binaries
+        run: dart compile exe bin/scatter.dart
+        
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v3.0.0
+        with:
+            name: artifacts-${{ matrix.os }}
+            path: bin/scatter.exe
+            
