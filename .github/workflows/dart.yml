@@ -3,7 +3,7 @@ name: Dart Build
 on: [pull_request, push]
 
 jobs:
-  test:
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
