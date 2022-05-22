@@ -11,9 +11,9 @@ class ConfigManager {
   ConfigManager._();
 
   static final Map<ConfigType, ConfigStore> _configs = {
-    ConfigType.config: ConfigStore<Config>(Config([]), (json) => Config.fromJson(json), ConfigType.config),
-    ConfigType.database: ConfigStore<Database>(Database({}), (json) => Database.fromJson(json), ConfigType.database),
-    ConfigType.tokens: ConfigStore<Tokens>(Tokens({}), (json) => Tokens.fromJson(json), ConfigType.tokens)
+    ConfigType.config: ConfigStore<Config>(Config([]), Config.fromJson, ConfigType.config),
+    ConfigType.database: ConfigStore<Database>(Database({}), Database.fromJson, ConfigType.database),
+    ConfigType.tokens: ConfigStore<Tokens>(Tokens({}), Tokens.fromJson, ConfigType.tokens)
   };
 
   static void loadConfigs() {
@@ -79,8 +79,9 @@ class ConfigManager {
 
   static String getToken(String platform) {
     var tokens = getConfigObject(ConfigType.tokens).tokens;
-    if (!tokens.containsKey(platform))
+    if (!tokens.containsKey(platform)) {
       throw "No token saved for platform '$platform'. Use 'scatter config --set-token $platform'";
+    }
     return tokens[platform]!;
   }
 
@@ -129,13 +130,12 @@ class ConfigManager {
 class ConfigStore<T> {
   final Deserializer deserializer;
   final ConfigType<T> type;
-  late final File file;
+  final File file;
 
   T data;
 
-  ConfigStore(this.data, this.deserializer, this.type) {
-    file = File("${ConfigManager._getConfigDirectory()}${type.name}.json");
-  }
+  ConfigStore(this.data, this.deserializer, this.type)
+      : file = File("${ConfigManager._getConfigDirectory()}${type.name}.json");
 
   void read(JsonEncoder encoder) {
     debug("Reading $file");

@@ -39,11 +39,25 @@ class GitHubAdapter extends HostAdapter {
 
     debug("Creating release at '$createUrl'");
 
-    var createResponse =
-        jsonDecode((await client.post(createUrl, headers: createHeaders(), body: jsonEncode(data))).body);
-    debug(createResponse);
+    var response = (await client.post(createUrl, headers: createHeaders(), body: jsonEncode(data)));
+    while (response.statusCode == 307) {
+      response = (await client.post(Uri.parse(response.headers["location"]!),
+          headers: createHeaders(), body: jsonEncode(data)));
+    }
 
-    var uploadUrl = UriTemplate(createResponse["upload_url"]).expand({"name": basename(spec.file.path)});
+    var responseData = jsonDecode(response.body) as Map<String, dynamic>;
+
+    debug(responseData);
+    debug(response.statusCode);
+
+    if (response.statusCode != 201) {
+      final errors =
+          (responseData["errors"] as List<dynamic>).map((e) => "${e["resource"]}[${e["field"]}]: ${e["code"]}");
+      error("Could not create GitHub release: ${responseData["message"]} / $errors");
+      return false;
+    }
+
+    var uploadUrl = UriTemplate(responseData["upload_url"]).expand({"name": basename(spec.file.path)});
     var uploadRequest = Request("POST", Uri.parse(uploadUrl));
 
     debug("Creating upload request");
@@ -68,7 +82,7 @@ class GitHubAdapter extends HostAdapter {
     debug(uploadResponse);
 
     if (success) {
-      info("GitHub release created: ${createResponse["html_url"]}");
+      info("GitHub release created: ${responseData["html_url"]}");
     } else {
       error(uploadResponse);
     }
