@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import '../commands/upload_command.dart';
 import '../log.dart';
 import '../util.dart';
 import 'data.dart';
@@ -10,11 +11,13 @@ typedef Deserializer<T> = T Function(Map<String, dynamic> json);
 class ConfigManager {
   ConfigManager._();
 
-  static final Map<ConfigType, ConfigStore> _configs = {
-    ConfigType.config: ConfigStore<Config>(Config([]), Config.fromJson, ConfigType.config),
-    ConfigType.database: ConfigStore<Database>(Database({}), Database.fromJson, ConfigType.database),
-    ConfigType.tokens: ConfigStore<Tokens>(Tokens({}), Tokens.fromJson, ConfigType.tokens)
+  static final Map<Type, ConfigStore> _configs = {
+    Config: ConfigStore<Config>(Config([], ChangelogMode.editor), Config.fromJson, "config"),
+    Database: ConfigStore<Database>(Database({}), Database.fromJson, "database"),
+    Tokens: ConfigStore<Tokens>(Tokens({}), Tokens.fromJson, "tokens")
   };
+
+  static const Map<String, Type> typesByName = {"config": Config, "database": Database, "tokens": Tokens};
 
   static void loadConfigs() {
     Directory(_getConfigDirectory()).createSync(recursive: true);
@@ -28,25 +31,25 @@ class ConfigManager {
 
   static bool removeDefaultVersion(String version) {
     var removed = getDefaultVersions().remove(version);
-    save(ConfigType.config);
+    save<Config>();
     return removed;
   }
 
   static bool addDefaultVersion(String version) {
     if (getDefaultVersions().contains(version)) return false;
     getDefaultVersions().add(version);
-    save(ConfigType.config);
+    save<Config>();
     return true;
   }
 
   static List<String> getDefaultVersions() {
-    return getConfigObject(ConfigType.config).default_target_versions;
+    return get<Config>().defaultTargetVersions;
   }
 
   // Mod info management
 
   static ModInfo? getMod(String modId) {
-    return getConfigObject(ConfigType.database).mods[modId];
+    return get<Database>().mods[modId];
   }
 
   static ModInfo requireMod(String modId) {
@@ -56,13 +59,13 @@ class ConfigManager {
   }
 
   static void storeMod(ModInfo info) {
-    getConfigObject(ConfigType.database).mods[info.mod_id] = info;
-    save(ConfigType.database);
+    get<Database>().mods[info.modId] = info;
+    save<Database>();
   }
 
   static bool removeMod(String modid) {
-    var removed = getConfigObject(ConfigType.database).mods.remove(modid);
-    save(ConfigType.database);
+    var removed = get<Database>().mods.remove(modid);
+    save<Database>();
     return removed != null;
   }
 
@@ -70,15 +73,15 @@ class ConfigManager {
 
   static void setToken(String platform, String? token) {
     if (token == null) {
-      getConfigObject(ConfigType.tokens).tokens.remove(platform);
+      get<Tokens>().tokens.remove(platform);
     } else {
-      getConfigObject(ConfigType.tokens).tokens[platform] = token;
+      get<Tokens>().tokens[platform] = token;
     }
-    save(ConfigType.tokens);
+    save<Tokens>();
   }
 
   static String getToken(String platform) {
-    var tokens = getConfigObject(ConfigType.tokens).tokens;
+    var tokens = get<Tokens>().tokens;
     if (!tokens.containsKey(platform)) {
       throw "No token saved for platform '$platform'. Use 'scatter config --set-token $platform'";
     }
@@ -89,28 +92,28 @@ class ConfigManager {
 
   static String export() {
     var exportData = {};
-    exportData["config"] = getConfigObject(ConfigType.config);
-    exportData["database"] = getConfigObject(ConfigType.database);
+    exportData["config"] = get<Config>();
+    exportData["database"] = get<Database>();
 
     return encoder.convert(exportData);
   }
 
   static void import(String json) {
     var exportData = jsonDecode(json);
-    _configs[ConfigType.config]!.deserialize(exportData["config"]);
-    _configs[ConfigType.database]!.deserialize(exportData["database"]);
-    save(ConfigType.config);
-    save(ConfigType.database);
+    _configs[Config]!.deserialize(exportData["config"]);
+    _configs[Database]!.deserialize(exportData["database"]);
+    save<Config>();
+    save<Database>();
   }
 
   // Utility
 
-  static String dumpConfig(ConfigType type) {
-    return encoder.convert(_configs[type]!.data);
+  static String dumpObject(Type objectType) {
+    return encoder.convert(_configs[objectType]!.data);
   }
 
-  static String getConfigFile(ConfigType type) {
-    return _configs[type]!.file.path;
+  static String getFilePath(Type objectType) {
+    return _configs[objectType]!.file.path;
   }
 
   static String _getConfigDirectory() {
@@ -118,24 +121,23 @@ class ConfigManager {
     return "${Platform.environment["HOME"]}/.config/scatter/";
   }
 
-  static void save(ConfigType config) {
-    _configs[config]!.save(encoder);
+  static void save<T>() {
+    _configs[T]!.save(encoder);
   }
 
-  static T getConfigObject<T>(ConfigType<T> type) {
-    return (_configs[type] as ConfigStore<T>).data;
+  static T get<T>() {
+    return (_configs[T] as ConfigStore<T>).data;
   }
 }
 
 class ConfigStore<T> {
   final Deserializer deserializer;
-  final ConfigType<T> type;
   final File file;
 
   T data;
 
-  ConfigStore(this.data, this.deserializer, this.type)
-      : file = File("${ConfigManager._getConfigDirectory()}${type.name}.json");
+  ConfigStore(this.data, this.deserializer, String name)
+      : file = File("${ConfigManager._getConfigDirectory()}$name.json");
 
   void read(JsonEncoder encoder) {
     debug("Reading $file");
@@ -156,21 +158,5 @@ class ConfigStore<T> {
     debug("Saving $file");
 
     file.writeAsStringSync(encoder.convert(data));
-  }
-}
-
-class ConfigType<T> {
-  static final ConfigType<Database> database = ConfigType("database");
-  static final ConfigType<Tokens> tokens = ConfigType("tokens");
-  static final ConfigType<Config> config = ConfigType("config");
-
-  static final Map<String, ConfigType> _byName = {"database": database, "tokens": tokens, "config": config};
-
-  final String name;
-
-  ConfigType(this.name);
-
-  static ConfigType? get(String name) {
-    return _byName[name];
   }
 }

@@ -8,18 +8,13 @@ import 'package:version/version.dart';
 
 import '../adapters/host_adapter.dart';
 import '../config/config.dart';
-import '../log.dart';
+import '../config/data.dart';
+import '../log.dart' as util;
 import '../util.dart';
 import 'scatter_command.dart';
 
 class UploadCommand extends ScatterCommand {
-  @override
-  final String description = "Upload the given artifact to all available hosts";
-
-  @override
-  final String name = "upload";
-
-  UploadCommand() {
+  UploadCommand() : super("upload", "Upload the given artifact to all available hosts") {
     argParser.addFlag("override-game-versions",
         abbr: "o", negatable: false, help: "Prompt which game versions to use instead of using the default ones");
     argParser.addFlag("read-as-file",
@@ -30,7 +25,7 @@ class UploadCommand extends ScatterCommand {
         abbr: "c", negatable: false, help: "Whether uploading to each individual platform should be confirmed");
     argParser.addFlag("confirm-relations",
         abbr: "r", negatable: false, help: "Ask for each dependency whether it should be declared");
-    argParser.addOption("changelog-file", help: "Read the changelog from the given file", abbr: "l");
+    argParser.addOption("changelog-mode", help: "Override the default changelog mode", abbr: "l");
   }
 
   @override
@@ -49,10 +44,10 @@ class UploadCommand extends ScatterCommand {
         throw "No artifact location defined, artifact search is unavailable. Usage: 'scatter upload <mod> <version>'";
       }
 
-      var namePattern = mod.artifact_filename_pattern;
+      var namePattern = mod.artifactFilenamePattern;
       var fileRegex = RegExp(namePattern!.replaceAll("{}", ".+\\"));
 
-      var artifactDir = Directory(mod.artifact_directory!);
+      var artifactDir = Directory(mod.artifactDirectory!);
       var files = artifactDir
           .listSync()
           .whereType<File>()
@@ -67,16 +62,17 @@ class UploadCommand extends ScatterCommand {
       var versions = files
           .map((e) =>
               basename(e.path).replaceAll(namePattern.split("{}")[0], "").replaceAll(namePattern.split("{}")[1], ""))
-          .toList();
+          .toList()
+        ..sort();
 
-      info("The following versions were found:");
+      util.info("The following versions were found:");
 
       for (int idx = 0; idx < versions.length; idx++) {
         print(
             "[$idx] ${versions[idx]} (${extractVersion(zipDecoder.decodeBytes(files[idx].readAsBytesSync()), modloader)})");
       }
 
-      var uploadIndex = int.parse(await prompt("Number of version to upload"));
+      var uploadIndex = int.parse(await util.prompt("Number of version to upload"));
       if (uploadIndex > versions.length - 1) throw "Invalid version index";
 
       uploadTarget = versions[uploadIndex];
@@ -87,7 +83,7 @@ class UploadCommand extends ScatterCommand {
     File targetFile;
     if (mod.artifactLocationDefined() && !args.wasParsed("read-as-file")) {
       var targetFileLocation =
-          "${mod.artifact_directory!}${mod.artifact_filename_pattern!.replaceAll("{}", uploadTarget)}";
+          "${mod.artifactDirectory!}${mod.artifactFilenamePattern!.replaceAll("{}", uploadTarget)}";
       targetFile = File(targetFileLocation);
     } else {
       targetFile = File(uploadTarget);
@@ -95,19 +91,24 @@ class UploadCommand extends ScatterCommand {
 
     if (!targetFile.existsSync()) throw "Unable to find artifact file: '${targetFile.path}'";
 
-    final String desc;
-    if (args.wasParsed("changelog-file")) {
-      desc = File(args["changelog-file"]).readAsStringSync();
-    } else {
-      desc = await prompt("Changelog");
+    var mode = ConfigManager.get<Config>().defaultChangelogMode!;
+    if (args.wasParsed("changelog-mode")) {
+      var parsedMode = ChangelogMode.values.asNameMap()[args["changelog-mode"]];
+      if (parsedMode == null) throw "Unknown changelog mode. Options: editor, prompt, file";
+
+      mode = parsedMode;
     }
 
-    var type = getEnum(ReleaseType.values,
-        await promptValidated("Release Type", enumMatcher(ReleaseType.values), invalidMessage: "Invalid release type"));
+    final changelog = await mode.changelogGetter();
+    util.debug("Got changelog: $changelog");
+
+    var type = await util
+        .promptValidated("Release Type", enumMatcher(ReleaseType.values), invalidMessage: "Invalid release type")
+        .then(ReleaseType.values.byName);
 
     var gameVersions = ConfigManager.getDefaultVersions();
     if (args.wasParsed("override-game-versions")) {
-      var userVersions = (await prompt("Comma-separated game versions")).split(",");
+      var userVersions = (await util.prompt("Comma-separated game versions")).split(",");
       gameVersions.clear();
       gameVersions.addAll(userVersions.map((e) => e.trim()));
     } else if (gameVersions.isEmpty) {
@@ -135,33 +136,61 @@ class UploadCommand extends ScatterCommand {
     var displayVersion = Version(parsedVersion.major, parsedVersion.minor, parsedVersion.patch);
 
     var versionName =
-        "[$minRequiredGameVersion${parsedGameVersions.length > 1 ? "+" : ""}] ${mod.display_name} - $displayVersion";
+        "[$minRequiredGameVersion${parsedGameVersions.length > 1 ? "+" : ""}] ${mod.displayName} - $displayVersion";
 
     var relations = List.of(mod.relations);
 
     if (args.wasParsed("confirm-relations")) {
       for (var dep in mod.relations) {
-        if (await ask("Declare dependency '${dep.slug}'")) continue;
+        if (await util.ask("Declare dependency '${dep.slug}'")) continue;
         relations.remove(dep);
       }
     }
 
-    var spec = UploadSpec(targetFile, versionName, artifactVersion, desc, type, gameVersions, relations);
+    var spec = UploadSpec(targetFile, versionName, artifactVersion, changelog, type, gameVersions, relations);
 
-    info("A build with following metadata will be published");
-    printKeyValuePair("Name", versionName, 15);
-    printKeyValuePair("Version", artifactVersion, 15);
-    printKeyValuePair("Release Type", getName(type), 15);
-    if (!await ask("Proceed")) return;
+    util.info("A build with following metadata will be published");
+    util.printKeyValuePair("Name", versionName, 15);
+    util.printKeyValuePair("Version", artifactVersion, 15);
+    util.printKeyValuePair("Release Type", getName(type), 15);
+    if (!await util.ask("Proceed")) return;
 
     for (var platform in HostAdapter.platforms) {
-      if (!mod.platform_ids.keys.contains(platform.toLowerCase())) continue;
+      if (!mod.platformIds.keys.contains(platform.toLowerCase())) continue;
 
       var adapter = HostAdapter.fromId(platform.toLowerCase());
-      if (args.wasParsed("confirm") && !await ask("Upload to $platform")) continue;
+      if (args.wasParsed("confirm") && !await util.ask("Upload to $platform")) continue;
 
-      info("Uploading to $platform");
+      util.info("Uploading to $platform");
       await adapter.upload(mod, spec);
     }
+  }
+}
+
+enum ChangelogMode {
+  editor(_openSystemEditor),
+  prompt(_readChangelogFromStdin),
+  file(_readChangelogFromFile);
+
+  final Future<String> Function() changelogGetter;
+
+  const ChangelogMode(this.changelogGetter);
+
+  static Future<String> _openSystemEditor() async {
+    final changelogFile = File("changelog.md")..writeAsStringSync("");
+
+    final editor = String.fromEnvironment("EDITOR", defaultValue: "vi");
+    await Process.start(editor, ["changelog.md"], mode: ProcessStartMode.inheritStdio)
+        .then((process) => process.exitCode);
+
+    return changelogFile.readAsString();
+  }
+
+  static Future<String> _readChangelogFromStdin() async {
+    return util.prompt("Changelog");
+  }
+
+  static Future<String> _readChangelogFromFile() async {
+    return File("changelog.md").readAsString();
   }
 }

@@ -47,7 +47,7 @@ class ModrinthAdapter extends HostAdapter {
     var json = <String, dynamic>{};
     var filename = basename(spec.file.path);
 
-    json["mod_id"] = mod.platform_ids[id];
+    json["mod_id"] = mod.platformIds[id];
     json["version_number"] = spec.version;
     json["file_parts"] = [filename];
 
@@ -75,7 +75,7 @@ class ModrinthAdapter extends HostAdapter {
     var responseObject = jsonDecode(await utf8.decodeStream(result.stream));
 
     if (success) {
-      info("Modrinth version created: https://modrinth.com/mod/${mod.mod_id}/version/${responseObject["id"]}");
+      info("Modrinth version created: https://modrinth.com/mod/${mod.modId}/version/${responseObject["id"]}");
     } else {
       error(responseObject);
     }

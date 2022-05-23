@@ -9,20 +9,14 @@ import '../util.dart';
 import 'scatter_command.dart';
 
 class EditCommand extends ScatterCommand {
-  @override
-  final String name = "edit";
-
-  @override
-  final String description = "Edit the specified mod";
+  EditCommand() : super("edit", "Edit the specified mod", requiredArgCount: 1);
 
   @override
   void execute(ArgResults args) async {
-    if (args.rest.isEmpty) throw "No mod id provided";
-
     var modId = args.rest[0];
     var mod = ConfigManager.requireMod(modId);
 
-    info("Editing mod '${mod.display_name}'");
+    info("Editing mod '${mod.displayName}'");
     info("Type 'done' to exit and save changes, 'save' to save changes");
     info("Type 'quit' to exit without saving changes");
 
@@ -36,11 +30,11 @@ class EditCommand extends ScatterCommand {
         if (command == "quit") {
           shell.stop();
         } else if (command == "done") {
-          ConfigManager.save(ConfigType.database);
+          ConfigManager.save<Database>();
           info("Changes saved", frame: true);
           shell.stop();
         } else if (command == "save") {
-          ConfigManager.save(ConfigType.database);
+          ConfigManager.save<Database>();
           info("Changes saved");
         } else if (command == "view") {
           mod.dumpToConsole();
@@ -76,16 +70,16 @@ class EditCommand extends ScatterCommand {
 
           if (args[0] == "name") {
             var newName = input.substring("set name ".length);
-            mod.display_name = newName;
+            mod.displayName = newName;
             info("Mod name changed to '$newName'");
           } else if (args[0] == "id") {
             if (args.length < 3 || args[2] != "confirm") {
               throw "This operation will forcibly save all changes and exit edit mode. Append 'confirm' to your command to execute";
             }
 
-            ConfigManager.removeMod(mod.mod_id);
+            ConfigManager.removeMod(mod.modId);
 
-            mod.mod_id = args[1];
+            mod.modId = args[1];
             ConfigManager.storeMod(mod);
 
             info("Mod id changed to '${args[1]}'");
@@ -104,16 +98,16 @@ class EditCommand extends ScatterCommand {
 
             HostAdapter.fromId(platform);
 
-            mod.platform_ids[platform] = id;
+            mod.platformIds[platform] = id;
 
             info("'$platform' id set to '$id'");
           } else if (args[0] == "artifact_directory") {
             var dir = input.substring("set artifact_directory ".length);
-            mod.artifact_directory = dir;
+            mod.artifactDirectory = dir;
             info("Artifact directory set to $dir");
           } else if (args[0] == "filename_pattern") {
             var pattern = input.substring("set filename_pattern ".length);
-            mod.artifact_filename_pattern = pattern;
+            mod.artifactFilenamePattern = pattern;
             info("Artifact filename pattern set to $pattern");
           } else {
             throw "Invalid property. Available: 'name', 'id', 'modloader', 'artifact_directory', 'filename_pattern'";

@@ -1,9 +1,8 @@
-// ignore_for_file: non_constant_identifier_names
-
 import 'package:json_annotation/json_annotation.dart';
 
 import '../adapters/curseforge_adapter.dart';
 import '../adapters/modrinth_adapter.dart';
+import '../commands/upload_command.dart';
 import '../log.dart';
 
 part 'data.g.dart';
@@ -19,11 +18,13 @@ class Tokens {
   Map<String, dynamic> toJson() => _$TokensToJson(this);
 }
 
-@JsonSerializable()
+@JsonSerializable(fieldRename: FieldRename.snake)
 class Config {
-  final List<String> default_target_versions;
+  final List<String> defaultTargetVersions;
 
-  Config(this.default_target_versions);
+  ChangelogMode? defaultChangelogMode;
+
+  Config(this.defaultTargetVersions, this.defaultChangelogMode);
 
   factory Config.fromJson(Map<String, dynamic> json) => _$ConfigFromJson(json);
 
@@ -41,36 +42,36 @@ class Database {
   Map<String, dynamic> toJson() => _$DatabaseToJson(this);
 }
 
-@JsonSerializable()
+@JsonSerializable(fieldRename: FieldRename.snake)
 class ModInfo {
-  String display_name, mod_id;
+  String displayName, modId;
 
   String modloader;
 
-  String? artifact_directory, artifact_filename_pattern;
+  String? artifactDirectory, artifactFilenamePattern;
 
-  final Map<String, String> platform_ids;
+  final Map<String, String> platformIds;
 
   final List<DependencyInfo> relations;
 
-  ModInfo(this.display_name, this.mod_id, this.modloader, this.platform_ids, this.relations, this.artifact_directory,
-      this.artifact_filename_pattern);
+  ModInfo(this.displayName, this.modId, this.modloader, this.platformIds, this.relations, this.artifactDirectory,
+      this.artifactFilenamePattern);
 
   factory ModInfo.fromJson(Map<String, dynamic> json) => _$ModInfoFromJson(json);
 
   Map<String, dynamic> toJson() => _$ModInfoToJson(this);
 
-  bool artifactLocationDefined() => artifact_filename_pattern != null && artifact_directory != null;
+  bool artifactLocationDefined() => artifactFilenamePattern != null && artifactDirectory != null;
 
   void dumpToConsole() {
-    printKeyValuePair("Name", "$display_name ($mod_id)");
+    printKeyValuePair("Name", "$displayName ($modId)");
     printKeyValuePair("Modloader", modloader);
-    platform_ids.forEach((key, value) {
+    platformIds.forEach((key, value) {
       printKeyValuePair("$key project id", value);
     });
 
-    printKeyValuePair("Artifact directory", artifact_directory ?? "<undefined>");
-    printKeyValuePair("Artifact filename pattern", artifact_filename_pattern ?? "<undefined>");
+    printKeyValuePair("Artifact directory", artifactDirectory ?? "<undefined>");
+    printKeyValuePair("Artifact filename pattern", artifactFilenamePattern ?? "<undefined>");
 
     if (relations.isEmpty) {
       print("No dependencies defined");

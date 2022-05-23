@@ -31,11 +31,11 @@ class GitHubAdapter extends HostAdapter {
 
   @override
   FutureOr<bool> upload(ModInfo mod, UploadSpec spec) async {
-    var createUrl = Uri.parse("${_url("api")}/repos/${mod.platform_ids["github"]}/releases");
+    var createUrl = Uri.parse("${_url("api")}/repos/${mod.platformIds["github"]}/releases");
     var data = {"tag_name": spec.version, "name": spec.version, "body": spec.changelog};
 
     var target = await prompt("Git tag target (empty for HEAD)");
-    if (target.isNotEmpty) data["target_commitish"] = target;
+    if (target.isNotEmpty) data["target_commitish"] = target.trim();
 
     debug("Creating release at '$createUrl'");
 

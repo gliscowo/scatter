@@ -10,13 +10,7 @@ import '../scatter.dart';
 import 'scatter_command.dart';
 
 class MigrateCommand extends ScatterCommand {
-  @override
-  final String name = "migrate";
-
-  @override
-  final String description = "Utility commands for migrating/fixing old configuration data";
-
-  MigrateCommand() {
+  MigrateCommand() : super("migrate", "Utility commands for migrating/fixing old configuration data") {
     argParser.addOption("resolve-modrinth-relations",
         help:
             "Try resolving and saving the modrinth project IDs of the given mod's relations (@ for the entire database)");
@@ -31,6 +25,8 @@ class MigrateCommand extends ScatterCommand {
       await _executeResolveRelations(args);
     } else if (args.wasParsed("set-modrinth-relations")) {
       await _executeSetRelations(args);
+    } else {
+      printUsage();
     }
   }
 
@@ -42,7 +38,7 @@ class MigrateCommand extends ScatterCommand {
     final oldestVersion = await prompt("Oldest applicable version (empty for none)");
 
     info(
-        "Adding the following currently stored relations to all versions of '${mod.display_name}' "
+        "Adding the following currently stored relations to all versions of '${mod.displayName}' "
         "on Modrinth, backtracking until the given oldest applicable one",
         frame: true);
 
@@ -103,8 +99,8 @@ class MigrateCommand extends ScatterCommand {
     final modId = args["resolve-modrinth-relations"] as String;
 
     if (modId == "@") {
-      var mods = ConfigManager.getConfigObject(ConfigType.database).mods.values;
-      info("Resolving dependencies for mods [${mods.map((e) => e.display_name).join(", ")}]", frame: true);
+      var mods = ConfigManager.get<Database>().mods.values;
+      info("Resolving dependencies for mods [${mods.map((e) => e.displayName).join(", ")}]", frame: true);
       for (var mod in mods) {
         await _tryResolveRelations(mod);
       }

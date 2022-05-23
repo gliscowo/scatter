@@ -10,20 +10,15 @@ import '../util.dart';
 import 'scatter_command.dart';
 
 class AddCommand extends ScatterCommand {
-  @override
-  final String name = "add";
-
-  @override
-  final String description = "Add a mod to the database";
+  AddCommand() : super("add", "Add a mod to the database", requiredArgCount: 1);
 
   @override
   void execute(ArgResults args) async {
-    if (args.rest.isEmpty) throw "No mod id provided";
-
     var modId = args.rest[0];
 
-    if (ConfigManager.getMod(modId) != null)
+    if (ConfigManager.getMod(modId) != null) {
       throw "A mod with id '$modId' already exists in the database. Did you mean 'scatter edit $modId'?";
+    }
 
     info("Adding a new mod with id '$modId' to the database", frame: true);
 
@@ -62,7 +57,7 @@ class AddCommand extends ScatterCommand {
 
     if (!await ask("Commit")) return;
     ConfigManager.storeMod(modInfo);
-    info("Successfully added mod '${modInfo.display_name}' to the database");
+    info("Successfully added mod '${modInfo.displayName}' to the database");
   }
 
   bool isDirectory(String dir) {

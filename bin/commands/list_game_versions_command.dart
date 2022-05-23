@@ -5,23 +5,13 @@ import '../log.dart';
 import 'scatter_command.dart';
 
 class ListGameVersionsCommand extends ScatterCommand {
-  @override
-  final String name = "list-game-versions";
-
-  @override
-  final String description = "Lists the game versions the given platform is aware of";
-
-  ListGameVersionsCommand() {
+  ListGameVersionsCommand()
+      : super("list-game-versions", "Lists the game versions the given platform is aware of", requiredArgCount: 1) {
     argParser.addOption("filter", abbr: "f");
   }
 
   @override
   void execute(ArgResults args) async {
-    if (args.rest.isEmpty) {
-      print("No platform provided");
-      return;
-    }
-
     try {
       var adapter = HostAdapter.fromId(args.rest[0]);
       var versions = await adapter.listVersions();

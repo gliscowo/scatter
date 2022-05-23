@@ -19,8 +19,8 @@ abstract class HostAdapter {
   }
 
   String idOf(ModInfo mod) {
-    var platformId = mod.platform_ids[id];
-    if (platformId == null) throw "Mod ${mod.display_name} is missing platform id for platform $id";
+    var platformId = mod.platformIds[id];
+    if (platformId == null) throw "Mod ${mod.displayName} is missing platform id for platform $id";
 
     return platformId;
   }

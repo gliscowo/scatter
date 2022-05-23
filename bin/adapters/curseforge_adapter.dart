@@ -99,7 +99,7 @@ class CurseForgeAdapter extends HostAdapter {
 
     debug("Request data: ${encoder.convert(json)}");
 
-    var request = MultipartRequest("POST", Uri.parse("$_url/api/projects/${mod.platform_ids[id]}/upload-file"));
+    var request = MultipartRequest("POST", Uri.parse("$_url/api/projects/${mod.platformIds[id]}/upload-file"));
 
     request
       ..fields["metadata"] = jsonEncode(json)
@@ -114,7 +114,7 @@ class CurseForgeAdapter extends HostAdapter {
 
     if (success) {
       info(
-          "CurseForge version created: https://www.curseforge.com/minecraft/mc-mods/${mod.mod_id}/files/${responseObject["id"]}");
+          "CurseForge version created: https://www.curseforge.com/minecraft/mc-mods/${mod.modId}/files/${responseObject["id"]}");
     } else {
       error(responseObject);
     }

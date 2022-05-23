@@ -5,16 +5,10 @@ import '../log.dart';
 import 'scatter_command.dart';
 
 class InfoCommand extends ScatterCommand {
-  @override
-  final String name = "info";
-
-  @override
-  final String description = "Prints information about a mod stored in the database";
+  InfoCommand() : super("info", "Prints information about a mod stored in the database", requiredArgCount: 1);
 
   @override
   void execute(ArgResults args) async {
-    if (args.rest.isEmpty) throw "No mod id provided";
-
     var mod = ConfigManager.getMod(args.rest[0]);
 
     if (mod == null) {

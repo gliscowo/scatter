@@ -18,11 +18,21 @@ Config _$ConfigFromJson(Map<String, dynamic> json) => Config(
       (json['default_target_versions'] as List<dynamic>)
           .map((e) => e as String)
           .toList(),
+      $enumDecodeNullable(
+          _$ChangelogModeEnumMap, json['default_changelog_mode']),
     );
 
 Map<String, dynamic> _$ConfigToJson(Config instance) => <String, dynamic>{
-      'default_target_versions': instance.default_target_versions,
+      'default_target_versions': instance.defaultTargetVersions,
+      'default_changelog_mode':
+          _$ChangelogModeEnumMap[instance.defaultChangelogMode],
     };
+
+const _$ChangelogModeEnumMap = {
+  ChangelogMode.editor: 'editor',
+  ChangelogMode.prompt: 'prompt',
+  ChangelogMode.file: 'file',
+};
 
 Database _$DatabaseFromJson(Map<String, dynamic> json) => Database(
       (json['mods'] as Map<String, dynamic>).map(
@@ -47,12 +57,12 @@ ModInfo _$ModInfoFromJson(Map<String, dynamic> json) => ModInfo(
     );
 
 Map<String, dynamic> _$ModInfoToJson(ModInfo instance) => <String, dynamic>{
-      'display_name': instance.display_name,
-      'mod_id': instance.mod_id,
+      'display_name': instance.displayName,
+      'mod_id': instance.modId,
       'modloader': instance.modloader,
-      'artifact_directory': instance.artifact_directory,
-      'artifact_filename_pattern': instance.artifact_filename_pattern,
-      'platform_ids': instance.platform_ids,
+      'artifact_directory': instance.artifactDirectory,
+      'artifact_filename_pattern': instance.artifactFilenamePattern,
+      'platform_ids': instance.platformIds,
       'relations': instance.relations,
     };
 
