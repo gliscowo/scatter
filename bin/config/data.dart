@@ -3,7 +3,7 @@ import 'package:json_annotation/json_annotation.dart';
 import '../adapters/curseforge_adapter.dart';
 import '../adapters/modrinth_adapter.dart';
 import '../commands/upload_command.dart';
-import '../log.dart';
+import '../console.dart';
 
 part 'data.g.dart';
 

@@ -5,7 +5,8 @@ import 'package:args/src/arg_results.dart';
 import '../adapters/host_adapter.dart';
 import '../config/config.dart';
 import '../config/data.dart';
-import '../log.dart';
+import '../console.dart';
+import '../scatter.dart';
 import '../util.dart';
 import 'scatter_command.dart';
 
@@ -20,7 +21,7 @@ class AddCommand extends ScatterCommand {
       throw "A mod with id '$modId' already exists in the database. Did you mean 'scatter edit $modId'?";
     }
 
-    info("Adding a new mod with id '$modId' to the database", frame: true);
+    logger.info("Adding a new mod with id '$modId' to the database");
 
     var displayName = await prompt("Display Name");
     var modloader =
@@ -40,7 +41,7 @@ class AddCommand extends ScatterCommand {
     if (await ask("Add dependencies")) {
       String slug, type;
       do {
-        info("Adding dependency");
+        logger.info("Adding dependency");
         slug = await prompt("Slug");
         type = await promptValidated("Type for dependency '$slug'", enumMatcher(DependencyType.values),
             invalidMessage: "Unknown dependency type");
@@ -51,13 +52,13 @@ class AddCommand extends ScatterCommand {
     var modInfo =
         ModInfo(displayName, modId, modloader, platformIds, relations, artifactDirectory, artifactFilenamePattern);
 
-    info("A mod with the following information will be added to the database", frame: true);
+    logger.info("A mod with the following information will be added to the database");
 
     modInfo.dumpToConsole();
 
     if (!await ask("Commit")) return;
     ConfigManager.storeMod(modInfo);
-    info("Successfully added mod '${modInfo.displayName}' to the database");
+    logger.info("Successfully added mod '${modInfo.displayName}' to the database");
   }
 
   bool isDirectory(String dir) {
@@ -76,7 +77,7 @@ class AddCommand extends ScatterCommand {
         if (response.trim().isEmpty) continue;
         platformIds[platformId] = response;
       }
-      if (platformIds.isEmpty) info("You must provide at least one project id", frame: true);
+      if (platformIds.isEmpty) logger.info("You must provide at least one project id");
     } while (platformIds.isEmpty);
 
     return platformIds;

@@ -9,7 +9,8 @@ import 'package:version/version.dart';
 import '../adapters/host_adapter.dart';
 import '../config/config.dart';
 import '../config/data.dart';
-import '../log.dart' as util;
+import '../console.dart' as util;
+import '../scatter.dart';
 import '../util.dart';
 import 'scatter_command.dart';
 
@@ -65,7 +66,7 @@ class UploadCommand extends ScatterCommand {
           .toList()
         ..sort();
 
-      util.info("The following versions were found:");
+      logger.info("The following versions were found:");
 
       for (int idx = 0; idx < versions.length; idx++) {
         print(
@@ -100,7 +101,7 @@ class UploadCommand extends ScatterCommand {
     }
 
     final changelog = await mode.changelogGetter();
-    util.debug("Got changelog: $changelog");
+    logger.fine("Using changelog: $changelog");
 
     var type = await util
         .promptValidated("Release Type", enumMatcher(ReleaseType.values), invalidMessage: "Invalid release type")
@@ -149,7 +150,7 @@ class UploadCommand extends ScatterCommand {
 
     var spec = UploadSpec(targetFile, versionName, artifactVersion, changelog, type, gameVersions, relations);
 
-    util.info("A build with following metadata will be published");
+    logger.info("A build with following metadata will be published");
     util.printKeyValuePair("Name", versionName, 15);
     util.printKeyValuePair("Version", artifactVersion, 15);
     util.printKeyValuePair("Release Type", getName(type), 15);
@@ -161,7 +162,7 @@ class UploadCommand extends ScatterCommand {
       var adapter = HostAdapter.fromId(platform.toLowerCase());
       if (args.wasParsed("confirm") && !await util.ask("Upload to $platform")) continue;
 
-      util.info("Uploading to $platform");
+      logger.info("Uploading to $platform");
       await adapter.upload(mod, spec);
     }
   }

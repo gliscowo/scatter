@@ -7,7 +7,7 @@ import 'package:http_parser/http_parser.dart';
 
 import '../config/config.dart';
 import '../config/data.dart';
-import '../log.dart';
+import '../console.dart';
 import '../scatter.dart';
 import '../util.dart';
 import 'host_adapter.dart';
@@ -43,12 +43,12 @@ class CurseForgeAdapter extends HostAdapter {
       var response =
           await client.get(Uri.parse("$_url/api/projects/$id/localization/export"), headers: createTokenHeader());
 
-      debug("Response status: ${response.statusCode}");
-      debug("Response body: ${response.body.length > 300 ? "<truncated>" : response.body}");
+      logger.fine("Response status: ${response.statusCode}");
+      logger.fine("Response body: ${response.body.length > 300 ? "<truncated>" : response.body}");
 
       return response.statusCode == 403;
     } catch (err) {
-      debug(err);
+      logger.fine("Caught error whilst checking CurseForge project", err);
       return false;
     }
   }
@@ -97,7 +97,7 @@ class CurseForgeAdapter extends HostAdapter {
       json["relations"] = {"projects": relationsList};
     }
 
-    debug("Request data: ${encoder.convert(json)}");
+    logger.fine("Request data: ${encoder.convert(json)}");
 
     var request = MultipartRequest("POST", Uri.parse("$_url/api/projects/${mod.platformIds[id]}/upload-file"));
 
@@ -113,10 +113,10 @@ class CurseForgeAdapter extends HostAdapter {
     var responseObject = jsonDecode(await utf8.decodeStream(result.stream));
 
     if (success) {
-      info(
+      logger.info(
           "CurseForge version created: https://www.curseforge.com/minecraft/mc-mods/${mod.modId}/files/${responseObject["id"]}");
     } else {
-      error(responseObject);
+      logger.severe(responseObject);
     }
 
     return success;

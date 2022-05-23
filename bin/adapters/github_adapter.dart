@@ -7,7 +7,7 @@ import 'package:uri/uri.dart';
 
 import '../config/config.dart';
 import '../config/data.dart';
-import '../log.dart';
+import '../console.dart';
 import '../scatter.dart';
 import '../util.dart';
 import 'host_adapter.dart';
@@ -37,7 +37,7 @@ class GitHubAdapter extends HostAdapter {
     var target = await prompt("Git tag target (empty for HEAD)");
     if (target.isNotEmpty) data["target_commitish"] = target.trim();
 
-    debug("Creating release at '$createUrl'");
+    logger.fine("Creating release at '$createUrl'");
 
     var response = (await client.post(createUrl, headers: createHeaders(), body: jsonEncode(data)));
     while (response.statusCode == 307) {
@@ -47,44 +47,44 @@ class GitHubAdapter extends HostAdapter {
 
     var responseData = jsonDecode(response.body) as Map<String, dynamic>;
 
-    debug(responseData);
-    debug(response.statusCode);
+    logger.fine(responseData);
+    logger.fine(response.statusCode);
 
     if (response.statusCode != 201) {
       final errors =
           (responseData["errors"] as List<dynamic>).map((e) => "${e["resource"]}[${e["field"]}]: ${e["code"]}");
-      error("Could not create GitHub release: ${responseData["message"]} / $errors");
+      logger.severe("Could not create GitHub release: ${responseData["message"]} / $errors");
       return false;
     }
 
     var uploadUrl = UriTemplate(responseData["upload_url"]).expand({"name": basename(spec.file.path)});
     var uploadRequest = Request("POST", Uri.parse(uploadUrl));
 
-    debug("Creating upload request");
+    logger.fine("Creating upload request");
 
     uploadRequest
       ..headers["Authorization"] = "token ${ConfigManager.getToken(id)}"
       ..headers["Content-Type"] = "application/java-archive"
       ..headers["Content-Length"] = spec.file.lengthSync().toString();
 
-    debug("Reading artifact bytes");
+    logger.fine("Reading artifact bytes");
 
     uploadRequest.bodyBytes = spec.file.readAsBytesSync();
 
-    debug("Uploading artifact");
+    logger.fine("Uploading artifact");
 
     var result = await client.send(uploadRequest);
     var success = result.statusCode == 201;
 
-    debug("Status Code: ${result.statusCode}");
+    logger.fine("Status Code: ${result.statusCode}");
 
     var uploadResponse = jsonDecode(await utf8.decodeStream(result.stream));
-    debug(uploadResponse);
+    logger.fine(uploadResponse);
 
     if (success) {
-      info("GitHub release created: ${responseData["html_url"]}");
+      logger.info("GitHub release created: ${responseData["html_url"]}");
     } else {
-      error(uploadResponse);
+      logger.severe("Could not upload artifact file", uploadResponse);
     }
 
     return success;

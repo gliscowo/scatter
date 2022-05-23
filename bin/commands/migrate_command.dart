@@ -5,7 +5,7 @@ import 'package:args/src/arg_results.dart';
 import '../adapters/modrinth_adapter.dart';
 import '../config/config.dart';
 import '../config/data.dart';
-import '../log.dart';
+import '../console.dart';
 import '../scatter.dart';
 import 'scatter_command.dart';
 
@@ -37,10 +37,8 @@ class MigrateCommand extends ScatterCommand {
 
     final oldestVersion = await prompt("Oldest applicable version (empty for none)");
 
-    info(
-        "Adding the following currently stored relations to all versions of '${mod.displayName}' "
-        "on Modrinth, backtracking until the given oldest applicable one",
-        frame: true);
+    logger.info("Adding the following currently stored relations to all versions of '${mod.displayName}' "
+        "on Modrinth, backtracking until the given oldest applicable one");
 
     final applicableRelations = mod.relations.where((element) => element.project_ids.containsKey(modrinth.id));
     if (applicableRelations.isEmpty) {
@@ -54,7 +52,7 @@ class MigrateCommand extends ScatterCommand {
     if (!await ask("\nProceed")) return;
 
     final versionList = await modrinth.fetchUnchecked("project/${modrinth.idOf(mod)}/version");
-    debug("Version query response: $versionList");
+    logger.info("Version query response: $versionList");
     if (versionList is! List<dynamic>) throw "Invalid API response";
 
     if (!versionList.any((element) => element["version_number"] == oldestVersion)) {
@@ -62,7 +60,7 @@ class MigrateCommand extends ScatterCommand {
     }
 
     for (var version in versionList) {
-      info("Patching version ${version["version_number"]}");
+      logger.info("Patching version ${version["version_number"]}");
 
       var deps = version["dependencies"] as List<dynamic>;
       for (var relation in mod.relations) {
@@ -70,7 +68,7 @@ class MigrateCommand extends ScatterCommand {
         if (modrinthId == null) continue;
 
         if (await _projectIdContained(deps.map((e) => e["version_id"]).cast<String>(), modrinthId)) {
-          info("Dependency ${relation.slug} already present, skipping");
+          logger.info("Dependency ${relation.slug} already present, skipping");
           continue;
         }
 
@@ -85,11 +83,11 @@ class MigrateCommand extends ScatterCommand {
       final result = await client.patch(modrinth.resolve("version/${version["id"]}"), body: encoded, headers: headers);
 
       if (result.statusCode != 204) {
-        error(result.body, message: "Could not modify version");
+        logger.warning("Could not modify version", result.body);
       }
 
       if (version["version_number"] == oldestVersion) {
-        info("Oldest applicable version encountered, stopping");
+        logger.info("Oldest applicable version encountered, stopping");
         break;
       }
     }
@@ -100,13 +98,13 @@ class MigrateCommand extends ScatterCommand {
 
     if (modId == "@") {
       var mods = ConfigManager.get<Database>().mods.values;
-      info("Resolving dependencies for mods [${mods.map((e) => e.displayName).join(", ")}]", frame: true);
+      logger.info("Resolving dependencies for mods [${mods.map((e) => e.displayName).join(", ")}]");
       for (var mod in mods) {
         await _tryResolveRelations(mod);
       }
     } else {
       final mod = ConfigManager.requireMod(modId);
-      info("Resolving dependencies for mod $modId");
+      logger.info("Resolving dependencies for mod $modId");
       await _tryResolveRelations(mod);
     }
   }
@@ -128,10 +126,10 @@ class MigrateCommand extends ScatterCommand {
       final id = await ModrinthAdapter.instance.getIdFromSlug(relation.slug);
       if (id != null) {
         relation.project_ids[ModrinthAdapter.instance.id] = id;
-        info("Fetched modrinth id $id for relation ${relation.slug}");
+        logger.info("Fetched modrinth id $id for relation ${relation.slug}");
         modified = true;
       } else {
-        error("Could not fetch project id for relation '${relation.slug}'");
+        logger.warning("Could not fetch project id for relation '${relation.slug}'");
       }
     }
 

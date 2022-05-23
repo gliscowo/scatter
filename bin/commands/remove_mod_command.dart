@@ -1,7 +1,8 @@
 import 'package:args/src/arg_results.dart';
 
 import '../config/config.dart';
-import '../log.dart';
+import '../console.dart';
+import '../scatter.dart';
 import 'scatter_command.dart';
 
 class RemoveCommand extends ScatterCommand {
@@ -17,6 +18,6 @@ class RemoveCommand extends ScatterCommand {
     if (!await ask("Remove mod '${mod.displayName}' from the database")) return;
 
     if (!ConfigManager.removeMod(modId)) throw "Could not remove '$modId' from the database";
-    info("'${mod.displayName}' successfully removed");
+    logger.info("'${mod.displayName}' successfully removed");
   }
 }

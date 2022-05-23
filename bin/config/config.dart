@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import '../commands/upload_command.dart';
-import '../log.dart';
+import '../scatter.dart';
 import '../util.dart';
 import 'data.dart';
 
@@ -140,7 +140,7 @@ class ConfigStore<T> {
       : file = File("${ConfigManager._getConfigDirectory()}$name.json");
 
   void read(JsonEncoder encoder) {
-    debug("Reading $file");
+    logger.fine("Reading $file");
 
     if (!file.existsSync()) {
       file.createSync();
@@ -155,7 +155,7 @@ class ConfigStore<T> {
   }
 
   void save(JsonEncoder encoder) {
-    debug("Saving $file");
+    logger.fine("Saving $file");
 
     file.writeAsStringSync(encoder.convert(data));
   }

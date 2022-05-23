@@ -1,7 +1,8 @@
 import 'package:args/args.dart';
 
 import '../adapters/host_adapter.dart';
-import '../log.dart';
+import '../console.dart';
+import '../scatter.dart';
 import 'scatter_command.dart';
 
 class ListGameVersionsCommand extends ScatterCommand {
@@ -22,7 +23,7 @@ class ListGameVersionsCommand extends ScatterCommand {
 
       versions.forEach(print);
     } catch (err) {
-      error(err, message: "Unable to get versions");
+      logger.severe("Could not list versions", err);
     }
   }
 }

@@ -7,7 +7,6 @@ import 'package:path/path.dart';
 
 import '../config/config.dart';
 import '../config/data.dart';
-import '../log.dart';
 import '../scatter.dart';
 import '../util.dart';
 import 'host_adapter.dart';
@@ -32,12 +31,12 @@ class ModrinthAdapter extends HostAdapter {
   Future<bool> isProject(String id) async {
     try {
       var response = await client.get(Uri.parse("$_url/api/v1/mod/$id"));
-      debug("Response status: ${response.statusCode}");
-      debug("Response body: ${response.body.length > 300 ? "<truncated>" : response.body}");
+      logger.fine("Response status: ${response.statusCode}");
+      logger.fine("Response body: ${response.body.length > 300 ? "<truncated>" : response.body}");
 
       return response.statusCode == 200;
     } catch (err) {
-      debug(err);
+      logger.fine(err);
       return false;
     }
   }
@@ -59,7 +58,7 @@ class ModrinthAdapter extends HostAdapter {
     json["dependencies"] = [];
     json["featured"] = true;
 
-    debug("Request data: ${encoder.convert(json)}");
+    logger.fine("Request data: ${encoder.convert(json)}");
 
     var request = MultipartRequest("POST", Uri.parse("$_url/api/v1/version"));
 
@@ -75,9 +74,9 @@ class ModrinthAdapter extends HostAdapter {
     var responseObject = jsonDecode(await utf8.decodeStream(result.stream));
 
     if (success) {
-      info("Modrinth version created: https://modrinth.com/mod/${mod.modId}/version/${responseObject["id"]}");
+      logger.info("Modrinth version created: https://modrinth.com/mod/${mod.modId}/version/${responseObject["id"]}");
     } else {
-      error(responseObject);
+      logger.severe("Could not create version: ", responseObject);
     }
 
     return success;
@@ -90,7 +89,7 @@ class ModrinthAdapter extends HostAdapter {
     final parsed = jsonDecode(response.body);
     if (parsed is! Map<String, dynamic>) throw "Invalid API response";
 
-    debug("Slug query response: $parsed");
+    logger.fine("Slug query response: $parsed");
     return parsed["id"] as String;
   }
 

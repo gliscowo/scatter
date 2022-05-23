@@ -2,7 +2,7 @@ import 'package:args/args.dart';
 
 import '../config/config.dart';
 import '../config/data.dart';
-import '../log.dart';
+import '../console.dart';
 import 'scatter_command.dart';
 
 class ListModsCommand extends ScatterCommand {
