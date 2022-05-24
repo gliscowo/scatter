@@ -19,7 +19,8 @@ Config _$ConfigFromJson(Map<String, dynamic> json) => Config(
           .map((e) => e as String)
           .toList(),
       $enumDecodeNullable(
-          _$ChangelogModeEnumMap, json['default_changelog_mode']),
+              _$ChangelogModeEnumMap, json['default_changelog_mode']) ??
+          ChangelogMode.editor,
     );
 
 Map<String, dynamic> _$ConfigToJson(Config instance) => <String, dynamic>{

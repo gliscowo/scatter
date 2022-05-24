@@ -92,7 +92,7 @@ class UploadCommand extends ScatterCommand {
 
     if (!targetFile.existsSync()) throw "Unable to find artifact file: '${targetFile.path}'";
 
-    var mode = ConfigManager.get<Config>().defaultChangelogMode!;
+    var mode = ConfigManager.get<Config>().defaultChangelogMode;
     if (args.wasParsed("changelog-mode")) {
       var parsedMode = ChangelogMode.values.asNameMap()[args["changelog-mode"]];
       if (parsedMode == null) throw "Unknown changelog mode. Options: editor, prompt, file";

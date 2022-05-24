@@ -115,8 +115,8 @@ class EditCommand extends ScatterCommand {
         } else {
           throw "Unknown command. Available: 'save', 'view', 'depmod', 'set'";
         }
-      } catch (err) {
-        logger.severe("Caught exception while editing mod", err);
+      } catch (err, stack) {
+        logger.severe("Caught exception while editing mod", err, stack);
       }
     }
   }

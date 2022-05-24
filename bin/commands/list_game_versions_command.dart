@@ -22,8 +22,8 @@ class ListGameVersionsCommand extends ScatterCommand {
       if (versions.length > 50 && !await ask("Print all ${versions.length} versions")) return;
 
       versions.forEach(print);
-    } catch (err) {
-      logger.severe("Could not list versions", err);
+    } catch (err, stack) {
+      logger.severe("Could not list versions", err, stack);
     }
   }
 }

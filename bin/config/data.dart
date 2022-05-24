@@ -14,7 +14,6 @@ class Tokens {
   Tokens(this.tokens);
 
   factory Tokens.fromJson(Map<String, dynamic> json) => _$TokensFromJson(json);
-
   Map<String, dynamic> toJson() => _$TokensToJson(this);
 }
 
@@ -22,12 +21,12 @@ class Tokens {
 class Config {
   final List<String> defaultTargetVersions;
 
-  ChangelogMode? defaultChangelogMode;
+  @JsonKey(defaultValue: ChangelogMode.editor)
+  ChangelogMode defaultChangelogMode;
 
   Config(this.defaultTargetVersions, this.defaultChangelogMode);
 
   factory Config.fromJson(Map<String, dynamic> json) => _$ConfigFromJson(json);
-
   Map<String, dynamic> toJson() => _$ConfigToJson(this);
 }
 
@@ -38,27 +37,21 @@ class Database {
   Database(this.mods);
 
   factory Database.fromJson(Map<String, dynamic> json) => _$DatabaseFromJson(json);
-
   Map<String, dynamic> toJson() => _$DatabaseToJson(this);
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class ModInfo {
   String displayName, modId;
-
   String modloader;
-
   String? artifactDirectory, artifactFilenamePattern;
-
   final Map<String, String> platformIds;
-
   final List<DependencyInfo> relations;
 
   ModInfo(this.displayName, this.modId, this.modloader, this.platformIds, this.relations, this.artifactDirectory,
       this.artifactFilenamePattern);
 
   factory ModInfo.fromJson(Map<String, dynamic> json) => _$ModInfoFromJson(json);
-
   Map<String, dynamic> toJson() => _$ModInfoToJson(this);
 
   bool artifactLocationDefined() => artifactFilenamePattern != null && artifactDirectory != null;

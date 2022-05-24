@@ -16,7 +16,7 @@ import 'commands/remove_mod_command.dart';
 import 'commands/upload_command.dart';
 import 'config/config.dart';
 
-const String version = "0.2";
+const String version = "0.3";
 
 final client = http.Client();
 bool verbose = false;
@@ -35,10 +35,16 @@ void main(List<String> args) async {
         .normal()
         .text(event.message);
     if (event.error != null) {
-      if (verbose) {
-        pen.text("${event.error}");
+      if (Logger.root.level <= Level.FINE) {
+        pen.red().text("\nerror: ").normal().text(" ${event.error}");
+
+        if (event.stackTrace != null) {
+          pen.text("\n${event.stackTrace}");
+        } else if (event.error is Error) {
+          pen.text("\n${(event.error as Error).stackTrace}");
+        }
       } else {
-        pen.text("(run with -v to see error details)");
+        pen.text(" (run with -v to see error details)");
       }
     }
     pen.print();
@@ -72,8 +78,8 @@ void main(List<String> args) async {
     ConfigManager.loadConfigs();
 
     await runner.run(args);
-  } catch (err) {
-    logger.severe("Something went terribly wrong: ", err);
+  } catch (err, stack) {
+    logger.severe("Something went terribly wrong", err, stack);
     scatterExit(1);
   }
 
