@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:args/command_runner.dart';
@@ -19,9 +20,8 @@ import 'config/config.dart';
 const String version = "0.3";
 
 final client = http.Client();
-bool verbose = false;
-
 final logger = Logger("scatter");
+final inputBytes = stdin.asBroadcastStream().transform(utf8.decoder);
 
 void main(List<String> args) async {
   Console.init();
@@ -34,6 +34,7 @@ void main(List<String> args) async {
         .text(": ")
         .normal()
         .text(event.message);
+
     if (event.error != null) {
       if (Logger.root.level <= Level.FINE) {
         pen.red().text("\nerror: ").normal().text(" ${event.error}");
@@ -47,6 +48,7 @@ void main(List<String> args) async {
         pen.text(" (run with -v to see error details)");
       }
     }
+
     pen.print();
   });
 
@@ -65,11 +67,11 @@ void main(List<String> args) async {
   runner.addCommand(MigrateCommand());
 
   try {
-    var parseResults = runner.parse(args);
-    if (parseResults.wasParsed("verbose")) {
+    if (args.contains("-v")) {
       Logger.root.level = Level.FINE;
     }
 
+    var parseResults = runner.parse(args);
     if (parseResults.wasParsed("version")) {
       print("scatter $version");
       return;
@@ -79,7 +81,7 @@ void main(List<String> args) async {
 
     await runner.run(args);
   } catch (err, stack) {
-    logger.severe("Something went terribly wrong", err, stack);
+    logger.severe(err, err, stack);
     scatterExit(1);
   }
 

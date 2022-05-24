@@ -2,10 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:archive/archive.dart';
+import 'package:console/console.dart';
 import 'package:toml/toml.dart';
 import 'package:version/version.dart';
 
 import 'config/data.dart';
+import 'console.dart';
 
 const JsonEncoder encoder = JsonEncoder.withIndent("    ");
 
@@ -13,7 +15,15 @@ enum Modloader { fabric, forge }
 
 enum DependencyType { optional, required, embedded }
 
-enum ReleaseType { alpha, beta, release }
+enum ReleaseType implements Colorable {
+  release(Color.GREEN),
+  beta(Color.YELLOW),
+  alpha(Color.RED);
+
+  @override
+  final Color color;
+  const ReleaseType(this.color);
+}
 
 class UploadSpec {
   final File file;

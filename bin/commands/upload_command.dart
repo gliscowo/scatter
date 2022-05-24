@@ -68,15 +68,12 @@ class UploadCommand extends ScatterCommand {
 
       logger.info("The following versions were found:");
 
-      for (int idx = 0; idx < versions.length; idx++) {
-        print(
-            "[$idx] ${versions[idx]} (${extractVersion(zipDecoder.decodeBytes(files[idx].readAsBytesSync()), modloader)})");
-      }
-
-      var uploadIndex = int.parse(await util.prompt("Number of version to upload"));
-      if (uploadIndex > versions.length - 1) throw "Invalid version index";
-
-      uploadTarget = versions[uploadIndex];
+      uploadTarget = await (util.EntryChooser.vertical(versions, selectedEntry: versions.length - 1)
+            ..formatter = (p0) {
+              int idx = versions.indexOf(p0);
+              return "${versions[idx]} (${extractVersion(zipDecoder.decodeBytes(files[idx].readAsBytesSync()), modloader)})";
+            })
+          .choose();
     } else {
       uploadTarget = args.rest[1];
     }
@@ -103,9 +100,9 @@ class UploadCommand extends ScatterCommand {
     final changelog = await mode.changelogGetter();
     logger.fine("Using changelog: $changelog");
 
-    var type = await util
-        .promptValidated("Release Type", enumMatcher(ReleaseType.values), invalidMessage: "Invalid release type")
-        .then(ReleaseType.values.byName);
+    var type = await (util.EntryChooser.horizontal(ReleaseType.values, message: "Release type")
+          ..formatter = (p0) => p0.name)
+        .choose();
 
     var gameVersions = ConfigManager.getDefaultVersions();
     if (args.wasParsed("override-game-versions")) {
@@ -180,7 +177,7 @@ enum ChangelogMode {
   static Future<String> _openSystemEditor() async {
     final changelogFile = File("changelog.md")..writeAsStringSync("");
 
-    final editor = String.fromEnvironment("EDITOR", defaultValue: "vi");
+    final editor = String.fromEnvironment("EDITOR", defaultValue: Platform.isWindows ? "notepad" : "vi");
     await Process.start(editor, ["changelog.md"], mode: ProcessStartMode.inheritStdio)
         .then((process) => process.exitCode);
 

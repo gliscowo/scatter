@@ -18,7 +18,7 @@ class ConfigCommand extends ScatterCommand {
         help: "Change the default versions all uploaded files are marked compatible with", negatable: false);
     argParser.addFlag("export", help: "Export scatter's configuration", negatable: false);
     argParser.addOption("import", help: "Import a config export from the given file");
-    argParser.addOption("set-changelog-mode", help: "Configure the default changelog mode");
+    argParser.addFlag("set-changelog-mode", help: "Configure the default changelog mode", negatable: false);
   }
 
   @override
@@ -42,13 +42,14 @@ class ConfigCommand extends ScatterCommand {
       ConfigManager.import(exportFile.readAsStringSync());
       logger.info("Config imported");
     } else if (args.wasParsed("set-changelog-mode")) {
-      final mode = ChangelogMode.values.asNameMap()[args["set-changelog-mode"]];
-      if (mode == null) throw "Unknown changelog mode. Options: editor, prompt, file";
+      final config = ConfigManager.get<Config>();
+      final mode =
+          await chooseEnum(ChangelogMode.values, message: "Changelog mode", selected: config.defaultChangelogMode);
 
-      ConfigManager.get<Config>().defaultChangelogMode = mode;
+      config.defaultChangelogMode = mode;
       ConfigManager.save<Config>();
 
-      logger.info("Default changelog mode updated to ${mode.name}");
+      logger.info("Default changelog mode updated to '${mode.name}'");
     } else if (args.wasParsed("set-token")) {
       var platform = HostAdapter.fromId(args["set-token"]);
       var token = await prompt("Token (empty to remove)", secret: true);

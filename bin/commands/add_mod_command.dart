@@ -24,8 +24,7 @@ class AddCommand extends ScatterCommand {
     logger.info("Adding a new mod with id '$modId' to the database");
 
     var displayName = await prompt("Display Name");
-    var modloader =
-        await promptValidated("Modloader", enumMatcher(Modloader.values), invalidMessage: "Unknown modloader");
+    var modloader = (await chooseEnum(Modloader.values, message: "Modloader")).name;
 
     Map<String, String> platformIds = await promptPlatformIds();
 
@@ -43,8 +42,7 @@ class AddCommand extends ScatterCommand {
       do {
         logger.info("Adding dependency");
         slug = await prompt("Slug");
-        type = await promptValidated("Type for dependency '$slug'", enumMatcher(DependencyType.values),
-            invalidMessage: "Unknown dependency type");
+        type = (await chooseEnum(DependencyType.values, message: "Type for dependency '$slug'")).name;
         relations.add(DependencyInfo.simple(slug, type));
       } while (await ask("'$slug' added as '$type' dependency. Add more"));
     }
