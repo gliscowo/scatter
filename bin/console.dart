@@ -29,11 +29,13 @@ abstract class EntryChooser<T> {
   EntryChooser(this._entries, this._selectedEntry, this._bindings);
 
   factory EntryChooser.vertical(List<T> entries, {int selectedEntry = 0}) {
-    return VerticalChooser(entries, selectedEntry);
+    return Platform.isWindows ? WindowsChooser(entries, selectedEntry) : VerticalChooser(entries, selectedEntry);
   }
 
   factory EntryChooser.horizontal(List<T> entries, {String? message, int selectedEntry = 0}) {
-    return HorizontalChooser(entries, selectedEntry, message);
+    return Platform.isWindows
+        ? WindowsChooser(entries, selectedEntry, message: message)
+        : HorizontalChooser(entries, selectedEntry, message);
   }
 
   Future<T> choose() async {
@@ -72,6 +74,44 @@ abstract class EntryChooser<T> {
   String _format(T t) {
     return (formatter ?? (t) => "$t")(t);
   }
+}
+
+class WindowsChooser<T> extends EntryChooser<T> {
+  String? message;
+  WindowsChooser(List<T> entries, int selectedEntry, {this.message}) : super(entries, selectedEntry, ["", ""]);
+
+  @override
+  Future<T> choose() async {
+    if (message != null) {
+      print("$inputColor$message: ");
+      Console.resetAll();
+    }
+
+    for (int i = 0; i < _entries.length; i++) {
+      print("  [$i] ${_format(_entries[i])}");
+      Console.resetAll();
+    }
+
+    stdout.write("${inputColor}Selection: ");
+    int selectedIndex = -1;
+    do {
+      final input = int.tryParse(await readLineAsync());
+      if (input != null && input > -1 && input < _entries.length) {
+        selectedIndex = input;
+      } else {
+        logger.warning("Invalid selection");
+        stdout.write("${inputColor}Selection: ");
+      }
+    } while (selectedIndex == -1);
+
+    return _entries[selectedIndex];
+  }
+
+  @override
+  void drawState() {}
+
+  @override
+  void prepare() {}
 }
 
 class VerticalChooser<T> extends EntryChooser<T> {
@@ -151,7 +191,7 @@ Future<bool> ask(String question, {secret = false}) async {
   Console.adapter.write("$question? [Y/n] ");
   Console.resetAll();
 
-  return inputBytes.transform(LineSplitter()).first.then((value) => value.toLowerCase() == "y");
+  return readLineAsync().then((value) => value.toLowerCase() == "y");
 }
 
 Future<String> prompt(String message, {secret = false}) async {
@@ -159,7 +199,7 @@ Future<String> prompt(String message, {secret = false}) async {
   Console.adapter.write("$message: ");
   Console.resetAll();
 
-  return inputBytes.transform(LineSplitter()).first;
+  return readLineAsync();
 }
 
 Future<String> promptValidated(String message, ResponseValidator validator,
@@ -170,10 +210,9 @@ Future<String> promptValidated(String message, ResponseValidator validator,
   do {
     inputColor.makeCurrent();
     Console.adapter.write("$message: ");
-    var future = inputBytes.transform(LineSplitter()).first;
     Console.resetAll();
 
-    response = await future;
+    response = await readLineAsync();
     if (!(valid = (emptyIsValid && response.trim().isEmpty) || await validator(response)) &&
         invalidMessage.isNotEmpty) {
       logger.info(invalidMessage);
@@ -182,6 +221,8 @@ Future<String> promptValidated(String message, ResponseValidator validator,
 
   return Future.value(response);
 }
+
+Future<String> readLineAsync() => inputBytes.transform(LineSplitter()).first;
 
 class StdinModes {
   static bool echo = stdin.echoMode;

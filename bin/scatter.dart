@@ -68,6 +68,7 @@ void main(List<String> args) async {
 
   try {
     if (args.contains("-v")) {
+      args.remove("-v");
       Logger.root.level = Level.FINE;
     }
 
