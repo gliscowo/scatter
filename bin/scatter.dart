@@ -1,9 +1,9 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:args/command_runner.dart';
 import 'package:console/console.dart';
-import 'package:http/http.dart' as http;
+import 'package:http/http.dart';
+import 'package:io/io.dart';
 import 'package:logging/logging.dart';
 
 import 'commands/add_mod_command.dart';
@@ -19,13 +19,10 @@ import 'config/config.dart';
 
 const String version = "0.3.1";
 
-final client = http.Client();
+final client = Client();
 final logger = Logger("scatter");
-final inputBytes = stdin.asBroadcastStream().transform(utf8.decoder);
 
 void main(List<String> args) async {
-  Console.init();
-
   Logger.root.onRecord.listen((event) {
     final pen = TextPen()
         .setColor(levelToColor(event.level))
@@ -66,6 +63,11 @@ void main(List<String> args) async {
   runner.addCommand(ListModsCommand());
   runner.addCommand(MigrateCommand());
 
+  final sigintWatch = ProcessSignal.sigint.watch().listen((event) {
+    Console.showCursor();
+    exit(exitCode);
+  });
+
   try {
     if (args.contains("-v")) {
       Logger.root.level = Level.FINE;
@@ -82,16 +84,14 @@ void main(List<String> args) async {
     await runner.run(args);
   } catch (err, stack) {
     logger.severe(err, err, stack);
-    scatterExit(1);
+    exitCode = 1;
+  } finally {
+    sigintWatch.cancel();
+    Console.resetAll();
+
+    client.close();
+    await sharedStdIn.terminate();
   }
-
-  scatterExit(0);
-}
-
-void scatterExit(int statusCode) {
-  Console.showCursor();
-  Console.resetAll();
-  exit(statusCode);
 }
 
 Color levelToColor(Level level) {

@@ -1,16 +1,18 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
 import 'package:console/console.dart';
+import 'package:io/io.dart';
 
 import 'console.dart';
 import 'scatter.dart';
 
-typedef EntryFormatter<T> = String Function(T);
+typedef EntryFormatter<T> = String Function(T, int);
 
 Future<T> chooseEnum<T extends Enum>(List<T> values, {String? message, T? selected}) async {
   return (EntryChooser.horizontal(values, message: message, selectedEntry: selected != null ? selected.index : 0)
-        ..formatter = (p0) => p0.name)
+        ..formatter = (p0, idx) => p0.name)
       .choose();
 }
 
@@ -33,40 +35,36 @@ abstract class EntryChooser<T> {
   }
 
   Future<T> choose() async {
-    _StdinModes.save();
-    stdin.echoMode = false;
-    stdin.lineMode = false;
-    Console.hideCursor();
+    stdin.saveStateAndDisableEcho();
     Console.resetAll();
+    Console.writeANSI("?25l"); // \x1b[?25l - hide cursor
 
     prepare();
     drawState();
     Console.saveCursor();
 
-    final upSub = inputBytes.where((event) => event == _bindings[0]).listen((event) {
-      _selectedEntry = max(0, min(_selectedEntry - 1, _entries.length - 1));
-      drawState();
-    });
+    final inputChars = sharedStdIn.transform(utf8.decoder).takeWhile((element) => element != "\u000a");
 
-    final downSub = inputBytes.where((event) => event == _bindings[1]).listen((event) {
-      _selectedEntry = max(0, min(_selectedEntry + 1, _entries.length - 1));
+    await for (var key in inputChars) {
+      if (key == _bindings[0]) {
+        _selectedEntry = max(0, min(_selectedEntry - 1, _entries.length - 1));
+      } else if (key == _bindings[1]) {
+        _selectedEntry = max(0, min(_selectedEntry + 1, _entries.length - 1));
+      }
       drawState();
-    });
-
-    await inputBytes.where((event) => event == "\u000a").first;
-    await Future.wait([upSub.cancel(), downSub.cancel()]);
+    }
 
     Console.restoreCursor();
     Console.showCursor();
-    _StdinModes.restore();
+    stdin.restoreState();
     return _entries[_selectedEntry];
   }
 
   void prepare();
   void drawState();
 
-  String _format(T t) {
-    return (formatter ?? (t) => "$t")(t);
+  String _format(T t, int idx) {
+    return (formatter ?? (t, idx) => "$t")(t, idx);
   }
 }
 
@@ -82,7 +80,7 @@ class WindowsChooser<T> extends EntryChooser<T> {
     }
 
     for (int i = 0; i < _entries.length; i++) {
-      print("  [$i] ${_format(_entries[i])}");
+      print("  [$i] ${_format(_entries[i], i)}");
       Console.resetAll();
     }
 
@@ -118,7 +116,7 @@ class VerticalChooser<T> extends EntryChooser<T> {
 
     for (int i = 0; i < _entries.length; i++) {
       if (i == _selectedEntry) Console.setBold(true);
-      print((i == _selectedEntry ? "→ " : "  ") + _format(_entries[i]));
+      print((i == _selectedEntry ? "→ " : "  ") + _format(_entries[i], i));
       Console.resetAll();
     }
   }
@@ -140,12 +138,14 @@ class HorizontalChooser<T> extends EntryChooser<T> {
   @override
   void drawState() {
     Console.moveCursor(column: cursorOrgin.column, row: cursorOrgin.row + 1);
-    Console.writeANSI("2K");
+    Console.writeANSI("2K"); // \x1b[nK - clear line : n = 2 - clear entire line
     Console.moveCursorUp();
 
     for (int i = 0; i < _entries.length; i++) {
       if (i == _selectedEntry) {
         final entry = _entries[i];
+
+        if (i == _selectedEntry) Console.setBold(true);
         (entry is Colorable ? entry.color : Color.WHITE).makeCurrent();
 
         Console.moveCursorDown();
@@ -154,7 +154,7 @@ class HorizontalChooser<T> extends EntryChooser<T> {
         Console.moveCursorUp();
       }
 
-      Console.adapter.write(_format(_entries[i]));
+      Console.adapter.write(_format(_entries[i], i));
       Console.resetAll();
       Console.adapter.write(" ");
     }
@@ -176,17 +176,20 @@ class HorizontalChooser<T> extends EntryChooser<T> {
   }
 }
 
-class _StdinModes {
-  static bool echo = stdin.echoMode;
-  static bool line = stdin.lineMode;
+extension SaveModes on Stdin {
+  static bool _echo = stdin.echoMode;
+  static bool _line = stdin.lineMode;
 
-  static save() {
-    echo = stdin.echoMode;
-    line = stdin.lineMode;
+  void saveStateAndDisableEcho() {
+    _echo = echoMode;
+    _line = lineMode;
+
+    echoMode = false;
+    lineMode = false;
   }
 
-  static restore() {
-    stdin.echoMode = echo;
-    stdin.lineMode = line;
+  void restoreState() {
+    stdin.echoMode = _echo;
+    stdin.lineMode = _line;
   }
 }

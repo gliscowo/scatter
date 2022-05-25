@@ -23,7 +23,7 @@ class ConfigManager {
     Directory(_getConfigDirectory()).createSync(recursive: true);
 
     _configs.forEach((type, config) {
-      config.read(encoder);
+      config.load(encoder);
     });
   }
 
@@ -139,7 +139,7 @@ class ConfigStore<T> {
   ConfigStore(this.data, this.deserializer, String name)
       : file = File("${ConfigManager._getConfigDirectory()}$name.json");
 
-  void read(JsonEncoder encoder) {
+  void load(JsonEncoder encoder) {
     logger.fine("Reading $file");
 
     if (!file.existsSync()) {

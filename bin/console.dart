@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:console/console.dart';
+import 'package:io/io.dart';
 
 import 'scatter.dart';
 
@@ -51,7 +52,7 @@ Future<String> promptValidated(String message, ResponseValidator validator,
   return response;
 }
 
-Future<String> readLineAsync() => inputBytes.transform(LineSplitter()).first;
+Future<String> readLineAsync() => sharedStdIn.transform(utf8.decoder).transform(LineSplitter()).first;
 
 abstract class Colorable {
   Color get color;

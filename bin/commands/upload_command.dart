@@ -70,10 +70,8 @@ class UploadCommand extends ScatterCommand {
       logger.info("The following versions were found:");
 
       uploadTarget = await (EntryChooser.vertical(versions, selectedEntry: versions.length - 1)
-            ..formatter = (p0) {
-              int idx = versions.indexOf(p0);
-              return "${versions[idx]} (${extractVersion(zipDecoder.decodeBytes(files[idx].readAsBytesSync()), modloader)})";
-            })
+            ..formatter = (p0, idx) =>
+                "${versions[idx]} (${extractVersion(zipDecoder.decodeBytes(files[idx].readAsBytesSync()), modloader)})")
           .choose();
     } else {
       uploadTarget = args.rest[1];
@@ -101,8 +99,7 @@ class UploadCommand extends ScatterCommand {
     final changelog = await mode.changelogGetter();
     logger.fine("Using changelog: $changelog");
 
-    var type = await (EntryChooser.horizontal(ReleaseType.values, message: "Release type")..formatter = (p0) => p0.name)
-        .choose();
+    var type = await chooseEnum(ReleaseType.values, message: "Release type");
 
     var gameVersions = ConfigManager.getDefaultVersions();
     if (args.wasParsed("override-game-versions")) {
@@ -165,6 +162,13 @@ class UploadCommand extends ScatterCommand {
   }
 }
 
+const String changelogPreset = """
+
+
+# Enter you changelog in this file and save it.
+# Lines starting with '#' will be ignored
+""";
+
 enum ChangelogMode {
   editor(_openSystemEditor),
   prompt(_readChangelogFromStdin),
@@ -175,13 +179,12 @@ enum ChangelogMode {
   const ChangelogMode(this.changelogGetter);
 
   static Future<String> _openSystemEditor() async {
-    final changelogFile = File("changelog.md")..writeAsStringSync("");
+    final changelogFile = File("changelog.md")..writeAsStringSync(changelogPreset);
 
     final editor = String.fromEnvironment("EDITOR", defaultValue: Platform.isWindows ? "notepad" : "vi");
-    await Process.start(editor, ["changelog.md"], mode: ProcessStartMode.inheritStdio)
-        .then((process) => process.exitCode);
+    await Process.start(editor, ["changelog.md"], mode: ProcessStartMode.inheritStdio).then((value) => value.exitCode);
 
-    return changelogFile.readAsString();
+    return _readFile(changelogFile);
   }
 
   static Future<String> _readChangelogFromStdin() async {
@@ -189,6 +192,19 @@ enum ChangelogMode {
   }
 
   static Future<String> _readChangelogFromFile() async {
-    return File("changelog.md").readAsString();
+    return _readFile(File("changelog.md"));
+  }
+
+  static Future<String> _readFile(File file) {
+    return file.readAsLines().then((lines) {
+      lines =
+          lines.where((element) => !element.trimLeft().startsWith("#")).skipWhile((value) => value.isEmpty).toList();
+
+      while (lines.isNotEmpty && lines.last.isEmpty) {
+        lines.removeLast();
+      }
+
+      return lines.join("\n");
+    });
   }
 }

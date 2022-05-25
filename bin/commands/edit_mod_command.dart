@@ -22,6 +22,7 @@ class EditCommand extends ScatterCommand {
 
     var shell = ShellPrompt(message: "scatter > ");
     var inputEvents = shell.loop();
+
     await for (var input in inputEvents) {
       var args = input.split(' ');
       var command = args.removeAt(0);

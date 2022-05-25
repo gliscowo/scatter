@@ -76,7 +76,7 @@ class AddCommand extends ScatterCommand {
         if (response.trim().isEmpty) continue;
         platformIds[platformId] = response;
       }
-      if (platformIds.isEmpty) logger.info("You must provide at least one project id");
+      if (platformIds.isEmpty) logger.warning("You must provide at least one project id");
     } while (platformIds.isEmpty);
 
     return platformIds;
