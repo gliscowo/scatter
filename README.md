@@ -1,6 +1,6 @@
 ## scatter 
 
-scatter is a command line tool for uploading Minecraft mods to distribution platforms, currently CurseForge and Modrinth
+scatter is a command line tool for uploading Minecraft mods to distribution platforms, currently CurseForge, Modrinth and GitHub Releases. For more in-depth documentation than this readme can provide, head to the [wiki](https://docs.wispforest.io/scatter/home/)
 
 ### Installation
 
@@ -29,7 +29,7 @@ scatter config --default-versions
 
 To add your tokens, run the following command and paste your token when prompted
 ```shell
-scatter config --set-token <platform>
+scatter config --tokens
 ```
 
 ***
