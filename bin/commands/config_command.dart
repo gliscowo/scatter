@@ -14,7 +14,7 @@ import 'upload_command.dart';
 class ConfigCommand extends ScatterCommand {
   ConfigCommand() : super("config", "Edit scatter's configuration") {
     argParser.addOption("dump", help: "Dumps the entire config file to the console");
-    argParser.addOption("set-token", help: "Set the token for the given platform");
+    argParser.addFlag("tokens", help: "Manage the stored access tokens", negatable: false);
     argParser.addFlag("default-versions",
         help: "Change the default versions all uploaded files are marked compatible with", negatable: false);
     argParser.addFlag("export", help: "Export scatter's configuration", negatable: false);
@@ -51,8 +51,9 @@ class ConfigCommand extends ScatterCommand {
       ConfigManager.save<Config>();
 
       logger.info("Default changelog mode updated to '${mode.name}'");
-    } else if (args.wasParsed("set-token")) {
-      var platform = HostAdapter.fromId(args["set-token"]);
+    } else if (args.wasParsed("tokens")) {
+      var platform = HostAdapter.fromId(
+          (await EntryChooser.horizontal(HostAdapter.platforms, message: "Platform").choose()).toLowerCase());
       var token = await prompt("Token (empty to remove)", secret: true);
       print("");
 
@@ -77,7 +78,7 @@ class ConfigCommand extends ScatterCommand {
         } else if (version.startsWith("-")) {
           if (version.substring(1).isEmpty) {
             ConfigManager.getDefaultVersions().clear();
-            ConfigManager.save<ConfigCommand>();
+            ConfigManager.save<Config>();
             logger.info("Default versions successfully cleared");
           } else {
             if (ConfigManager.removeDefaultVersion(version.substring(1))) {

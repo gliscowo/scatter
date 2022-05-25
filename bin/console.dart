@@ -30,7 +30,13 @@ Future<String> prompt(String message, {secret = false}) async {
   Console.adapter.write("$inputColor$message: ");
   Console.resetAll();
 
-  return readLineAsync();
+  if (secret) stdin.echoMode = false;
+  return secret
+      ? readLineAsync()
+      : readLineAsync().then((value) {
+          stdin.echoMode = true;
+          return value;
+        });
 }
 
 Future<String> promptValidated(String message, ResponseValidator validator,

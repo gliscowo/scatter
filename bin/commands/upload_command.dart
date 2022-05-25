@@ -65,7 +65,7 @@ class UploadCommand extends ScatterCommand {
           .map((e) =>
               basename(e.path).replaceAll(namePattern.split("{}")[0], "").replaceAll(namePattern.split("{}")[1], ""))
           .toList()
-        ..sort();
+        ..sort((a, b) => Version.parse(a).compareTo(Version.parse(b)));
 
       logger.info("The following versions were found:");
 
@@ -87,17 +87,6 @@ class UploadCommand extends ScatterCommand {
     }
 
     if (!targetFile.existsSync()) throw "Unable to find artifact file: '${targetFile.path}'";
-
-    var mode = ConfigManager.get<Config>().defaultChangelogMode;
-    if (args.wasParsed("changelog-mode")) {
-      var parsedMode = ChangelogMode.values.asNameMap()[args["changelog-mode"]];
-      if (parsedMode == null) throw "Unknown changelog mode. Options: editor, prompt, file";
-
-      mode = parsedMode;
-    }
-
-    final changelog = await mode.changelogGetter();
-    logger.fine("Using changelog: $changelog");
 
     var type = await chooseEnum(ReleaseType.values, message: "Release type");
 
@@ -141,6 +130,17 @@ class UploadCommand extends ScatterCommand {
         relations.remove(dep);
       }
     }
+
+    var changelogMode = ConfigManager.get<Config>().defaultChangelogMode;
+    if (args.wasParsed("changelog-mode")) {
+      var parsedMode = ChangelogMode.values.asNameMap()[args["changelog-mode"]];
+      if (parsedMode == null) throw "Unknown changelog mode. Options: editor, prompt, file";
+
+      changelogMode = parsedMode;
+    }
+
+    final changelog = await changelogMode.changelogGetter();
+    logger.fine("Using changelog: $changelog");
 
     var spec = UploadSpec(targetFile, versionName, artifactVersion, changelog, type, gameVersions, relations);
 
