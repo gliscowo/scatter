@@ -7,6 +7,7 @@ import 'package:path/path.dart';
 import 'package:version/version.dart';
 
 import '../adapters/host_adapter.dart';
+import '../chooser.dart';
 import '../config/config.dart';
 import '../config/data.dart';
 import '../console.dart' as util;
@@ -68,7 +69,7 @@ class UploadCommand extends ScatterCommand {
 
       logger.info("The following versions were found:");
 
-      uploadTarget = await (util.EntryChooser.vertical(versions, selectedEntry: versions.length - 1)
+      uploadTarget = await (EntryChooser.vertical(versions, selectedEntry: versions.length - 1)
             ..formatter = (p0) {
               int idx = versions.indexOf(p0);
               return "${versions[idx]} (${extractVersion(zipDecoder.decodeBytes(files[idx].readAsBytesSync()), modloader)})";
@@ -100,8 +101,7 @@ class UploadCommand extends ScatterCommand {
     final changelog = await mode.changelogGetter();
     logger.fine("Using changelog: $changelog");
 
-    var type = await (util.EntryChooser.horizontal(ReleaseType.values, message: "Release type")
-          ..formatter = (p0) => p0.name)
+    var type = await (EntryChooser.horizontal(ReleaseType.values, message: "Release type")..formatter = (p0) => p0.name)
         .choose();
 
     var gameVersions = ConfigManager.getDefaultVersions();

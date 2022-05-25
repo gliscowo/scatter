@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:args/src/arg_results.dart';
 
 import '../adapters/host_adapter.dart';
+import '../chooser.dart';
 import '../config/config.dart';
 import '../config/data.dart';
 import '../console.dart';

@@ -68,13 +68,12 @@ void main(List<String> args) async {
 
   try {
     if (args.contains("-v")) {
-      args.remove("-v");
       Logger.root.level = Level.FINE;
     }
 
-    var parseResults = runner.parse(args);
+    var parseResults = runner.parse(args.where((element) => element != "-v"));
     if (parseResults.wasParsed("version")) {
-      print("scatter $version");
+      logger.info("scatter $version");
       return;
     }
 
