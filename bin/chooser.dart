@@ -87,7 +87,7 @@ class WindowsChooser<T> extends EntryChooser<T> {
     stdout.write("${inputColor}Selection: ");
     int selectedIndex = -1;
     do {
-      final input = int.tryParse(await readLineAsync());
+      final input = int.tryParse(await sharedStdIn.nextLine());
       if (input != null && input > -1 && input < _entries.length) {
         selectedIndex = input;
       } else {

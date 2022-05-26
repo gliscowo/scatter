@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:console/console.dart';
@@ -23,7 +22,7 @@ Future<bool> ask(String question, {secret = false}) async {
   Console.adapter.write("$inputColor$question? [Y/n] ");
   Console.resetAll();
 
-  return readLineAsync().then((value) => value.toLowerCase() == "y");
+  return sharedStdIn.nextLine().then((value) => value.toLowerCase().trim() == "y");
 }
 
 Future<String> prompt(String message, {secret = false}) async {
@@ -32,8 +31,8 @@ Future<String> prompt(String message, {secret = false}) async {
 
   if (secret) stdin.echoMode = false;
   return secret
-      ? readLineAsync()
-      : readLineAsync().then((value) {
+      ? sharedStdIn.nextLine()
+      : sharedStdIn.nextLine().then((value) {
           stdin.echoMode = true;
           return value;
         });
@@ -47,7 +46,7 @@ Future<String> promptValidated(String message, ResponseValidator validator,
     Console.adapter.write("$inputColor$message: ");
     Console.resetAll();
 
-    var input = await readLineAsync();
+    var input = await sharedStdIn.nextLine();
     if ((emptyIsValid && input.trim().isEmpty) || await validator(input)) {
       response = input;
     } else if (invalidMessage != null) {
@@ -57,8 +56,6 @@ Future<String> promptValidated(String message, ResponseValidator validator,
 
   return response;
 }
-
-Future<String> readLineAsync() => sharedStdIn.transform(utf8.decoder).transform(LineSplitter()).first;
 
 abstract class Colorable {
   Color get color;

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:archive/archive.dart';
 import 'package:archive/archive_io.dart';
@@ -181,8 +182,13 @@ enum ChangelogMode {
   static Future<String> _openSystemEditor() async {
     final changelogFile = File("changelog.md")..writeAsStringSync(changelogPreset);
 
-    final editor = String.fromEnvironment("EDITOR", defaultValue: Platform.isWindows ? "notepad" : "vi");
-    await Process.start(editor, ["changelog.md"], mode: ProcessStartMode.inheritStdio).then((value) => value.exitCode);
+    await Isolate.spawn<ResumeInfo>((message) async {
+      final editor = String.fromEnvironment("EDITOR", defaultValue: Platform.isWindows ? "notepad" : "vi");
+      await Process.start(editor, ["changelog.md"], mode: ProcessStartMode.inheritStdio)
+          .then((value) => value.exitCode);
+
+      message.resume();
+    }, ResumeInfo(Isolate.current, Isolate.current.pause()));
 
     return _readFile(changelogFile);
   }
@@ -206,5 +212,16 @@ enum ChangelogMode {
 
       return lines.join("\n");
     });
+  }
+}
+
+class ResumeInfo {
+  final Isolate isolate;
+  final Capability capability;
+
+  ResumeInfo(this.isolate, this.capability);
+
+  void resume() {
+    isolate.resume(capability);
   }
 }
