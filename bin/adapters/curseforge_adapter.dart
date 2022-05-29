@@ -83,6 +83,7 @@ class CurseForgeAdapter extends HostAdapter {
     }
 
     json["changelog"] = spec.changelog;
+    json["changelogType"] = "markdown";
     json["displayName"] = spec.name;
     json["gameVersions"] = versions;
     json["releaseType"] = getName(spec.type);

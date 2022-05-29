@@ -29,6 +29,8 @@ class UploadCommand extends ScatterCommand {
     argParser.addFlag("confirm-relations",
         abbr: "r", negatable: false, help: "Ask for each dependency whether it should be declared");
     argParser.addOption("changelog-mode", help: "Override the default changelog mode", abbr: "l");
+    argParser.addFlag("preserve-file",
+        help: "Preserve the contents of the changelog file in editor mode", abbr: "p", negatable: false);
   }
 
   @override
@@ -132,6 +134,7 @@ class UploadCommand extends ScatterCommand {
       }
     }
 
+    ChangelogMode.eraseFile = !args.wasParsed("preserve-file");
     var changelogMode = ConfigManager.get<Config>().defaultChangelogMode;
     if (args.wasParsed("changelog-mode")) {
       var parsedMode = ChangelogMode.values.asNameMap()[args["changelog-mode"]];
@@ -175,13 +178,19 @@ enum ChangelogMode {
   prompt(_readChangelogFromStdin),
   file(_readChangelogFromFile);
 
+  static bool eraseFile = true;
+
   final Future<String> Function() changelogGetter;
 
   const ChangelogMode(this.changelogGetter);
 
+  // the most bruh place in scatter
   static Future<String> _openSystemEditor() async {
     final changelogFile = File("changelog.md")..writeAsStringSync(changelogPreset);
 
+    // we pause the main isolate's event loop here to stop processing stdin events
+    // i still don't quite understand why it sometimes just eats them, but it literally makes
+    // vim unusable. thus, the vim isolate exists only for waking the main isolate once vim is done
     await Isolate.spawn<ResumeInfo>((message) async {
       final editor = String.fromEnvironment("EDITOR", defaultValue: Platform.isWindows ? "notepad" : "vi");
       await Process.start(editor, ["changelog.md"], mode: ProcessStartMode.inheritStdio)
