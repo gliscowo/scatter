@@ -169,8 +169,8 @@ class UploadCommand extends ScatterCommand {
 const String changelogPreset = """
 
 
-# Enter you changelog in this file and save it.
-# Lines starting with '#' will be ignored
+// Enter you changelog in this file and save it.
+// Lines starting with '//' will be ignored
 """;
 
 enum ChangelogMode {
@@ -186,7 +186,10 @@ enum ChangelogMode {
 
   // the most bruh place in scatter
   static Future<String> _openSystemEditor() async {
-    final changelogFile = File("changelog.md")..writeAsStringSync(changelogPreset);
+    final changelogFile = File("changelog.md");
+    if (changelogFile.existsSync() && eraseFile) {
+      changelogFile.writeAsStringSync(changelogPreset);
+    }
 
     // we pause the main isolate's event loop here to stop processing stdin events
     // i still don't quite understand why it sometimes just eats them, but it literally makes
@@ -213,7 +216,7 @@ enum ChangelogMode {
   static Future<String> _readFile(File file) {
     return file.readAsLines().then((lines) {
       lines =
-          lines.where((element) => !element.trimLeft().startsWith("#")).skipWhile((value) => value.isEmpty).toList();
+          lines.where((element) => !element.trimLeft().startsWith("//")).skipWhile((value) => value.isEmpty).toList();
 
       while (lines.isNotEmpty && lines.last.isEmpty) {
         lines.removeLast();
