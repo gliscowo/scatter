@@ -73,7 +73,7 @@ class CurseForgeAdapter extends HostAdapter {
     }
 
     mappedGameVersions.add(mod.modloader.replaceFirst("f", "F"));
-    var versions = <int>[];
+    var versions = <int>{};
     for (var version in mappedGameVersions) {
       try {
         versions.add(parsed.firstWhere((element) => element["name"] == version)["id"]);
@@ -85,7 +85,7 @@ class CurseForgeAdapter extends HostAdapter {
     json["changelog"] = spec.changelog;
     json["changelogType"] = "markdown";
     json["displayName"] = spec.name;
-    json["gameVersions"] = versions;
+    json["gameVersions"] = versions.toList();
     json["releaseType"] = getName(spec.type);
 
     if (spec.declaredRelations.isNotEmpty) {

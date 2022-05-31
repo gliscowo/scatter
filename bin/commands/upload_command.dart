@@ -188,7 +188,7 @@ enum ChangelogMode {
   static Future<String> _openSystemEditor() async {
     final changelogFile = File("changelog.md");
     if (changelogFile.existsSync() && eraseFile) {
-      changelogFile.writeAsStringSync(changelogPreset);
+      changelogFile.writeAsStringSync(changelogPreset, flush: true);
     }
 
     // we pause the main isolate's event loop here to stop processing stdin events
