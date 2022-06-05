@@ -68,7 +68,7 @@ class UploadCommand extends ScatterCommand {
           .map((e) =>
               basename(e.path).replaceAll(namePattern.split("{}")[0], "").replaceAll(namePattern.split("{}")[1], ""))
           .toList()
-        ..sort((a, b) => Version.parse(a).compareTo(Version.parse(b)));
+        ..sort((a, b) => _tryParse(a).compareTo(_tryParse(b)));
 
       logger.info("The following versions were found:");
 
@@ -163,6 +163,14 @@ class UploadCommand extends ScatterCommand {
       logger.info("Uploading to $platform");
       await adapter.upload(mod, spec);
     }
+  }
+}
+
+Version _tryParse(String input) {
+  try {
+    return Version.parse(input);
+  } catch (e) {
+    return Version(0, 0, 0);
   }
 }
 

@@ -6,9 +6,9 @@ import 'package:io/io.dart';
 
 import 'scatter.dart';
 
-const Color inputColor = Color.DARK_BLUE;
-const Color keyColor = Color.BLUE;
-const Color valueColor = Color.LIGHT_GRAY;
+final String inputColor = color(0x0AA1DD);
+final String keyColor = color(0xFCA17D);
+const String valueColor = "${Console.ANSI_ESCAPE}0m";
 
 typedef ResponseValidator = FutureOr<bool> Function(String);
 
@@ -17,6 +17,8 @@ void printKeyValuePair(String key, dynamic value, [expectedKeyLength = 30]) {
   print("${value is Colorable ? (value).color : valueColor}$value");
   Console.resetAll();
 }
+
+String color(int rgb) => "${Console.ANSI_ESCAPE}38;2;${rgb >> 16};${(rgb >> 8) & 0xFF};${rgb & 0xFF}m";
 
 Future<bool> ask(String question, {secret = false}) async {
   Console.adapter.write("$inputColor$question? [Y/n] ");
