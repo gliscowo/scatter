@@ -55,8 +55,14 @@ class ModrinthAdapter extends HostAdapter {
     json["game_versions"] = spec.gameVersions;
     json["release_channel"] = getName(spec.type);
     json["loaders"] = [mod.modloader];
-    json["dependencies"] = [];
     json["featured"] = true;
+    json["dependencies"] = [
+      for (var relation in mod.relations)
+        {
+          "dependency_type": relation.type == "optional" ? "optional" : "required",
+          "project_id": relation.project_ids[id]
+        }
+    ];
 
     logger.fine("Request data: ${encoder.convert(json)}");
 

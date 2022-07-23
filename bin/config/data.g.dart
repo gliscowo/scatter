@@ -55,6 +55,7 @@ ModInfo _$ModInfoFromJson(Map<String, dynamic> json) => ModInfo(
           .toList(),
       json['artifact_directory'] as String?,
       json['artifact_filename_pattern'] as String?,
+      json['changelog_location'] as String?,
     );
 
 Map<String, dynamic> _$ModInfoToJson(ModInfo instance) => <String, dynamic>{
@@ -63,6 +64,7 @@ Map<String, dynamic> _$ModInfoToJson(ModInfo instance) => <String, dynamic>{
       'modloader': instance.modloader,
       'artifact_directory': instance.artifactDirectory,
       'artifact_filename_pattern': instance.artifactFilenamePattern,
+      'changelog_location': instance.changelogLocation,
       'platform_ids': instance.platformIds,
       'relations': instance.relations,
     };

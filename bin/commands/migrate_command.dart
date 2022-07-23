@@ -52,7 +52,7 @@ class MigrateCommand extends ScatterCommand {
     if (!await ask("\nProceed")) return;
 
     final versionList = await modrinth.fetchUnchecked("project/${modrinth.idOf(mod)}/version");
-    logger.info("Version query response: $versionList");
+    logger.fine("Version query response: $versionList");
     if (versionList is! List<dynamic>) throw "Invalid API response";
 
     if (!versionList.any((element) => element["version_number"] == oldestVersion)) {
@@ -60,6 +60,8 @@ class MigrateCommand extends ScatterCommand {
     }
 
     for (var version in versionList) {
+      if (version is! Map<String, dynamic>) continue;
+
       logger.info("Patching version ${version["version_number"]}");
 
       var deps = version["dependencies"] as List<dynamic>;
@@ -67,7 +69,8 @@ class MigrateCommand extends ScatterCommand {
         var modrinthId = relation.project_ids[modrinth.id];
         if (modrinthId == null) continue;
 
-        if (await _projectIdContained(deps.map((e) => e["version_id"]).cast<String>(), modrinthId)) {
+        if (await _projectIdContained(
+            deps.map((e) => e["version_id"]).where((element) => element != null).cast<String>(), modrinthId)) {
           logger.info("Dependency ${relation.slug} already present, skipping");
           continue;
         }
@@ -75,7 +78,7 @@ class MigrateCommand extends ScatterCommand {
         deps.add({"dependency_type": relation.type == "optional" ? "optional" : "required", "project_id": modrinthId});
       }
 
-      final encoded = jsonEncode(version);
+      final encoded = jsonEncode({"dependencies": version["dependencies"]});
 
       var headers = modrinth.authHeader();
       headers["Content-Type"] = "application/json";

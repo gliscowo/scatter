@@ -37,6 +37,11 @@ class AddCommand extends ScatterCommand {
           invalidMessage: "Pattern must contain '{}' placeholder for version");
     }
 
+    String? changelogLocation;
+    if (await ask("Add changelog file location")) {
+      changelogLocation = await prompt("Changelog file location");
+    }
+
     List<DependencyInfo> relations = [];
     if (await ask("Add dependencies")) {
       String slug, type;
@@ -48,8 +53,8 @@ class AddCommand extends ScatterCommand {
       } while (await ask("'$slug' added as '$type' dependency. Add more"));
     }
 
-    var modInfo =
-        ModInfo(displayName, modId, modloader, platformIds, relations, artifactDirectory, artifactFilenamePattern);
+    var modInfo = ModInfo(displayName, modId, modloader, platformIds, relations, artifactDirectory,
+        artifactFilenamePattern, changelogLocation);
 
     logger.info("A mod with the following information will be added to the database");
 

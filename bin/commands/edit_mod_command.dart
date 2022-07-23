@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:args/src/arg_results.dart';
 import 'package:console/console.dart';
+import 'package:io/io.dart';
 
 import '../adapters/host_adapter.dart';
 import '../config/config.dart';
@@ -20,20 +23,20 @@ class EditCommand extends ScatterCommand {
     logger.info("Type 'done' to exit and save changes, 'save' to save changes");
     logger.info("Type 'quit' to exit without saving changes");
 
-    var shell = ShellPrompt(message: "scatter > ");
-    var inputEvents = shell.loop();
+    while (true) {
+      stdout.write("scatter > ");
+      var input = await sharedStdIn.nextLine();
 
-    await for (var input in inputEvents) {
-      var args = input.split(' ');
+      var args = (input).split(' ');
       var command = args.removeAt(0);
 
       try {
         if (command == "quit") {
-          shell.stop();
+          break;
         } else if (command == "done") {
           ConfigManager.save<Database>();
           logger.info("Changes saved");
-          shell.stop();
+          break;
         } else if (command == "save") {
           ConfigManager.save<Database>();
           logger.info("Changes saved");
@@ -66,7 +69,7 @@ class EditCommand extends ScatterCommand {
           }
         } else if (command == "set") {
           if (args.length < 2) {
-            throw "Missing${args.isEmpty ? " property and" : ""} value to set. ${args.isEmpty ? "Available: 'name', 'id', 'modloader', 'artifact_directory', 'filename_pattern', 'platform_id'" : ""}";
+            throw "Missing${args.isEmpty ? " property and" : ""} value to set. ${args.isEmpty ? "Available: 'name', 'id', 'modloader', 'artifact_directory', 'filename_pattern', 'platform_id', 'changelog_location'" : ""}";
           }
 
           if (args[0] == "name") {
@@ -85,7 +88,7 @@ class EditCommand extends ScatterCommand {
 
             logger.info("Mod id changed to '${args[1]}'");
             logger.info("Changes saved");
-            shell.stop();
+            break;
           } else if (args[0] == "modloader") {
             if (!enumMatcher(Modloader.values)(args[1])) throw "Unknown modloader. Available: 'fabric', 'forge'";
 
@@ -110,12 +113,18 @@ class EditCommand extends ScatterCommand {
             var pattern = input.substring("set filename_pattern ".length);
             mod.artifactFilenamePattern = pattern;
             logger.info("Artifact filename pattern set to $pattern");
+          } else if (args[0] == "changelog_location") {
+            var location = input.substring("set changelog_location ".length);
+            mod.changelogLocation = location;
+            logger.info("Changelog location set to $location");
           } else {
-            throw "Invalid property. Available: 'name', 'id', 'modloader', 'artifact_directory', 'filename_pattern'";
+            throw "Invalid property. Available: 'name', 'id', 'modloader', 'artifact_directory', 'filename_pattern', 'changelog_location'";
           }
         } else {
           throw "Unknown command. Available: 'save', 'view', 'depmod', 'set'";
         }
+      } on String catch (msg) {
+        print(TextPen().red().text(msg).normal());
       } catch (err, stack) {
         logger.severe("Caught exception while editing mod", err, stack);
       }

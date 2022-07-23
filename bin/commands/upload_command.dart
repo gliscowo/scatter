@@ -143,7 +143,7 @@ class UploadCommand extends ScatterCommand {
       changelogMode = parsedMode;
     }
 
-    final changelog = await changelogMode.changelogGetter();
+    final changelog = await changelogMode.changelogGetter(mod);
     logger.fine("Using changelog: $changelog");
 
     var spec = UploadSpec(targetFile, versionName, artifactVersion, changelog, type, gameVersions, relations);
@@ -188,12 +188,12 @@ enum ChangelogMode {
 
   static bool eraseFile = true;
 
-  final Future<String> Function() changelogGetter;
+  final Future<String> Function(ModInfo) changelogGetter;
 
   const ChangelogMode(this.changelogGetter);
 
   // the most bruh place in scatter
-  static Future<String> _openSystemEditor() async {
+  static Future<String> _openSystemEditor(ModInfo mod) async {
     final changelogFile = File("changelog.md");
     if (changelogFile.existsSync() && eraseFile) {
       changelogFile.writeAsStringSync(changelogPreset, flush: true);
@@ -213,12 +213,12 @@ enum ChangelogMode {
     return _readFile(changelogFile);
   }
 
-  static Future<String> _readChangelogFromStdin() async {
+  static Future<String> _readChangelogFromStdin(ModInfo mod) async {
     return util.prompt("Changelog");
   }
 
-  static Future<String> _readChangelogFromFile() async {
-    return _readFile(File("changelog.md"));
+  static Future<String> _readChangelogFromFile(ModInfo mod) async {
+    return _readFile(File(mod.changelogLocation ?? "changelog.md"));
   }
 
   static Future<String> _readFile(File file) {

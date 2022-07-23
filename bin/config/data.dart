@@ -45,11 +45,12 @@ class ModInfo {
   String displayName, modId;
   String modloader;
   String? artifactDirectory, artifactFilenamePattern;
+  String? changelogLocation;
   final Map<String, String> platformIds;
   final List<DependencyInfo> relations;
 
   ModInfo(this.displayName, this.modId, this.modloader, this.platformIds, this.relations, this.artifactDirectory,
-      this.artifactFilenamePattern);
+      this.artifactFilenamePattern, this.changelogLocation);
 
   factory ModInfo.fromJson(Map<String, dynamic> json) => _$ModInfoFromJson(json);
   Map<String, dynamic> toJson() => _$ModInfoToJson(this);
@@ -65,6 +66,7 @@ class ModInfo {
 
     printKeyValuePair("Artifact directory", artifactDirectory ?? "<undefined>");
     printKeyValuePair("Artifact filename pattern", artifactFilenamePattern ?? "<undefined>");
+    printKeyValuePair("Changelog location", changelogLocation ?? "<undefined>");
 
     if (relations.isEmpty) {
       print("No dependencies defined");

@@ -1,14 +1,10 @@
 name: scatter
-description: A starting point for Dart libraries or applications.
-version: 1.0.0
-# homepage: https://www.example.com
+description: A CLI tool for uploading Minecraft Mods to Modrinth, CurseForge and GitHub
+version: 0.3.5
+homepage: https://docs.wispforest.io/scatter/home/
 
 environment:
   sdk: '>=2.17.0 <3.0.0'
-
-
-# dependencies:
-#   path: ^1.8.0
 
 dev_dependencies:
   lints: ^2.0.0
