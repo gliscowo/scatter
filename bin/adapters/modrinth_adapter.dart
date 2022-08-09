@@ -58,10 +58,11 @@ class ModrinthAdapter extends HostAdapter {
     json["featured"] = true;
     json["dependencies"] = [
       for (var relation in mod.relations)
-        {
-          "dependency_type": relation.type == "optional" ? "optional" : "required",
-          "project_id": relation.project_ids[id]
-        }
+        if (relation.project_ids.containsKey(id))
+          {
+            "dependency_type": relation.type == "optional" ? "optional" : "required",
+            "project_id": relation.project_ids[id]
+          }
     ];
 
     logger.fine("Request data: ${encoder.convert(json)}");
