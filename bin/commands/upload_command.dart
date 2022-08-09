@@ -53,29 +53,30 @@ class UploadCommand extends ScatterCommand {
       var fileRegex = RegExp(namePattern!.replaceAll("{}", ".+\\"));
 
       var artifactDir = Directory(mod.artifactDirectory!);
-      var files = artifactDir
+      var files = (artifactDir
           .listSync()
           .whereType<File>()
           .where((element) =>
               fileRegex.hasMatch(basename(element.path)) &&
               !element.path.contains("dev") &&
               !element.path.contains("sources"))
-          .toList();
+          .map((file) => _FileWithVersion(
+              file,
+              basename(file.path)
+                  .replaceAll(namePattern.split("{}")[0], "")
+                  .replaceAll(namePattern.split("{}")[1], "")))
+          .toList())
+        ..sort((a, b) => _tryParse(a.version).compareTo(_tryParse(b.version)));
 
       if (files.isEmpty) throw "No artifacts found";
 
-      var versions = files
-          .map((e) =>
-              basename(e.path).replaceAll(namePattern.split("{}")[0], "").replaceAll(namePattern.split("{}")[1], ""))
-          .toList()
-        ..sort((a, b) => _tryParse(a).compareTo(_tryParse(b)));
-
       logger.info("The following versions were found:");
 
-      uploadTarget = await (EntryChooser.vertical(versions, selectedEntry: versions.length - 1)
-            ..formatter = (p0, idx) =>
-                "${versions[idx]} (${extractVersion(zipDecoder.decodeBytes(files[idx].readAsBytesSync()), modloader)})")
-          .choose();
+      uploadTarget = (await (EntryChooser.vertical(files, selectedEntry: files.length - 1)
+                ..formatter = (p0, idx) =>
+                    "${files[idx].version} (${extractVersion(zipDecoder.decodeBytes(files[idx].file.readAsBytesSync()), modloader)})")
+              .choose())
+          .version;
     } else {
       uploadTarget = args.rest[1];
     }
@@ -172,6 +173,12 @@ Version _tryParse(String input) {
   } catch (e) {
     return Version(0, 0, 0);
   }
+}
+
+class _FileWithVersion {
+  final File file;
+  final String version;
+  _FileWithVersion(this.file, this.version);
 }
 
 const String changelogPreset = """
