@@ -11,7 +11,7 @@ import 'console.dart';
 
 const JsonEncoder encoder = JsonEncoder.withIndent("    ");
 
-enum Modloader { fabric, forge }
+enum Modloader { fabric, forge, quilt }
 
 enum DependencyType { optional, required, embedded }
 
@@ -27,15 +27,10 @@ enum ReleaseType implements Colorable {
 
 class UploadSpec {
   final File file;
-
   final String name;
-
   final String version, changelog;
-
   final ReleaseType type;
-
   final List<String> gameVersions;
-
   final List<DependencyInfo> declaredRelations;
 
   UploadSpec(this.file, this.name, this.version, this.changelog, this.type, this.gameVersions, this.declaredRelations);
@@ -53,16 +48,34 @@ String getName<T extends Enum>(T instance) {
   return instance.toString().split('.')[1];
 }
 
-String extractVersion(Archive archive, Modloader loader) {
-  switch (loader) {
-    case Modloader.fabric:
-      var fmjFile = archive.findFile("fabric.mod.json");
-      if (fmjFile == null) throw "The provided artifact is not a fabric mod";
-      return jsonDecode(utf8.decode(fmjFile.content))["version"];
-    case Modloader.forge:
-      var modTomlFile = archive.findFile("META-INF/mods.toml");
-      if (modTomlFile == null) throw "The provided artifact is not a forge mod";
-      return TomlDocument.parse(utf8.decode(modTomlFile.content)).toMap()["mods"][0]["version"];
+String extractVersion(Archive archive, List<Modloader> loaders) {
+  String readSingleLoader(Modloader loader) {
+    switch (loader) {
+      case Modloader.quilt:
+        var qmjFile = archive.findFile("quilt.mod.json");
+        if (qmjFile == null) throw "The provided artifact is not a quilt mod";
+        return jsonDecode(utf8.decode(qmjFile.content))["quilt_loader"]["version"];
+      case Modloader.fabric:
+        var fmjFile = archive.findFile("fabric.mod.json");
+        if (fmjFile == null) throw "The provided artifact is not a fabric mod";
+        return jsonDecode(utf8.decode(fmjFile.content))["version"];
+      case Modloader.forge:
+        var modTomlFile = archive.findFile("META-INF/mods.toml");
+        if (modTomlFile == null) throw "The provided artifact is not a forge mod";
+        return TomlDocument.parse(utf8.decode(modTomlFile.content)).toMap()["mods"][0]["version"];
+    }
+  }
+
+  if (loaders.length == 1) {
+    return readSingleLoader(loaders.first);
+  } else {
+    for (var loader in loaders) {
+      try {
+        return readSingleLoader(loader);
+        // ignore: empty_catches
+      } catch (e) {}
+    }
+    throw "Could not extract version from any known mod metadata file";
   }
 }
 

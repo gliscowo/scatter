@@ -69,7 +69,7 @@ class EditCommand extends ScatterCommand {
           }
         } else if (command == "set") {
           if (args.length < 2) {
-            throw "Missing${args.isEmpty ? " property and" : ""} value to set. ${args.isEmpty ? "Available: 'name', 'id', 'modloader', 'artifact_directory', 'filename_pattern', 'platform_id', 'changelog_location'" : ""}";
+            throw "Missing${args.isEmpty ? " property and" : ""} value to set. ${args.isEmpty ? "Available: 'name', 'id', 'modloaders', 'artifact_directory', 'filename_pattern', 'platform_id', 'changelog_location'" : ""}";
           }
 
           if (args[0] == "name") {
@@ -89,11 +89,17 @@ class EditCommand extends ScatterCommand {
             logger.info("Mod id changed to '${args[1]}'");
             logger.info("Changes saved");
             break;
-          } else if (args[0] == "modloader") {
-            if (!enumMatcher(Modloader.values)(args[1])) throw "Unknown modloader. Available: 'fabric', 'forge'";
+          } else if (args[0] == "modloaders") {
+            var loaders = args[1].split(",");
 
-            mod.modloader = args[1];
-            logger.info("Modloader changed to '${args[1]}'");
+            for (final loader in loaders) {
+              if (!enumMatcher(Modloader.values)(loader)) {
+                throw "Unknown modloader '$loader'. Available: 'fabric', 'forge', 'quilt'";
+              }
+            }
+
+            mod.loaders = loaders.map((e) => Modloader.values.byName(e)).toList();
+            logger.info("Modloaders set to '${args[1]}'");
           } else if (args[0] == "platform_id") {
             if (args.length < 3) throw "Missing ${args.length < 2 ? "platform and " : ""}id to set";
 
@@ -118,7 +124,7 @@ class EditCommand extends ScatterCommand {
             mod.changelogLocation = location;
             logger.info("Changelog location set to $location");
           } else {
-            throw "Invalid property. Available: 'name', 'id', 'modloader', 'artifact_directory', 'filename_pattern', 'changelog_location'";
+            throw "Invalid property. Available: 'name', 'id', 'modloaders', 'artifact_directory', 'filename_pattern', 'changelog_location'";
           }
         } else {
           throw "Unknown command. Available: 'save', 'view', 'depmod', 'set'";

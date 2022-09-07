@@ -48,7 +48,7 @@ Map<String, dynamic> _$DatabaseToJson(Database instance) => <String, dynamic>{
 ModInfo _$ModInfoFromJson(Map<String, dynamic> json) => ModInfo(
       json['display_name'] as String,
       json['mod_id'] as String,
-      json['modloader'] as String,
+      ModInfo._parseVersions(json['modloader'] as Object),
       Map<String, String>.from(json['platform_ids'] as Map),
       (json['relations'] as List<dynamic>)
           .map((e) => DependencyInfo.fromJson(e as Map<String, dynamic>))
@@ -61,13 +61,19 @@ ModInfo _$ModInfoFromJson(Map<String, dynamic> json) => ModInfo(
 Map<String, dynamic> _$ModInfoToJson(ModInfo instance) => <String, dynamic>{
       'display_name': instance.displayName,
       'mod_id': instance.modId,
-      'modloader': instance.modloader,
+      'modloader': instance.loaders.map((e) => _$ModloaderEnumMap[e]).toList(),
       'artifact_directory': instance.artifactDirectory,
       'artifact_filename_pattern': instance.artifactFilenamePattern,
       'changelog_location': instance.changelogLocation,
       'platform_ids': instance.platformIds,
       'relations': instance.relations,
     };
+
+const _$ModloaderEnumMap = {
+  Modloader.fabric: 'fabric',
+  Modloader.forge: 'forge',
+  Modloader.quilt: 'quilt',
+};
 
 DependencyInfo _$DependencyInfoFromJson(Map<String, dynamic> json) =>
     DependencyInfo(

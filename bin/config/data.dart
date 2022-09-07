@@ -4,6 +4,7 @@ import '../adapters/curseforge_adapter.dart';
 import '../adapters/modrinth_adapter.dart';
 import '../commands/upload_command.dart';
 import '../console.dart';
+import '../util.dart';
 
 part 'data.g.dart';
 
@@ -43,23 +44,24 @@ class Database {
 @JsonSerializable(fieldRename: FieldRename.snake)
 class ModInfo {
   String displayName, modId;
-  String modloader;
+  @JsonKey(fromJson: _parseVersions, name: "modloader")
+  List<Modloader> loaders;
   String? artifactDirectory, artifactFilenamePattern;
   String? changelogLocation;
   final Map<String, String> platformIds;
   final List<DependencyInfo> relations;
 
-  ModInfo(this.displayName, this.modId, this.modloader, this.platformIds, this.relations, this.artifactDirectory,
+  ModInfo(this.displayName, this.modId, this.loaders, this.platformIds, this.relations, this.artifactDirectory,
       this.artifactFilenamePattern, this.changelogLocation);
 
   factory ModInfo.fromJson(Map<String, dynamic> json) => _$ModInfoFromJson(json);
   Map<String, dynamic> toJson() => _$ModInfoToJson(this);
 
-  bool artifactLocationDefined() => artifactFilenamePattern != null && artifactDirectory != null;
+  bool get artifactLocationDefined => artifactFilenamePattern != null && artifactDirectory != null;
 
   void dumpToConsole() {
     printKeyValuePair("Name", "$displayName ($modId)");
-    printKeyValuePair("Modloader", modloader);
+    printKeyValuePair("Modloaders", [for (var loader in loaders) loader.name]);
     platformIds.forEach((key, value) {
       printKeyValuePair("$key project id", value);
     });
@@ -78,6 +80,16 @@ class ModInfo {
         printKeyValuePair("  Modrinth ID", info.project_ids[ModrinthAdapter.instance.id]);
         print("");
       }
+    }
+  }
+
+  static List<Modloader> _parseVersions(Object json) {
+    if (json is String) {
+      return [Modloader.values.byName(json)];
+    } else if (json is List<dynamic>) {
+      return json.map((e) => Modloader.values.byName(e)).toList();
+    } else {
+      throw ArgumentError.value(json, "modloader", "could not read modloaders from json");
     }
   }
 }

@@ -25,7 +25,10 @@ class AddCommand extends ScatterCommand {
     logger.info("Adding a new mod with id '$modId' to the database");
 
     var displayName = await prompt("Display Name");
-    var modloader = (await chooseEnum(Modloader.values, message: "Modloader")).name;
+    var loaders = [await chooseEnum(Modloader.values, message: "Modloader")];
+    while (await ask("Add more")) {
+      loaders.add(await chooseEnum(Modloader.values, message: "Modloader"));
+    }
 
     Map<String, String> platformIds = await promptPlatformIds();
 
@@ -53,7 +56,7 @@ class AddCommand extends ScatterCommand {
       } while (await ask("'$slug' added as '$type' dependency. Add more"));
     }
 
-    var modInfo = ModInfo(displayName, modId, modloader, platformIds, relations, artifactDirectory,
+    var modInfo = ModInfo(displayName, modId, loaders, platformIds, relations, artifactDirectory,
         artifactFilenamePattern, changelogLocation);
 
     logger.info("A mod with the following information will be added to the database");

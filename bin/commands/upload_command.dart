@@ -41,11 +41,10 @@ class UploadCommand extends ScatterCommand {
     if (mod == null) throw "Unknown mod id: '${args.rest[0]}'";
 
     var zipDecoder = ZipDecoder();
-    var modloader = getEnum(Modloader.values, mod.modloader);
 
     String uploadTarget;
     if (args.rest.length < 2) {
-      if (!mod.artifactLocationDefined()) {
+      if (!mod.artifactLocationDefined) {
         throw "No artifact location defined, artifact search is unavailable. Usage: 'scatter upload <mod> <version>'";
       }
 
@@ -74,7 +73,7 @@ class UploadCommand extends ScatterCommand {
 
       uploadTarget = (await (EntryChooser.vertical(files, selectedEntry: files.length - 1)
                 ..formatter = (p0, idx) =>
-                    "${files[idx].version} (${extractVersion(zipDecoder.decodeBytes(files[idx].file.readAsBytesSync()), modloader)})")
+                    "${files[idx].version} (${extractVersion(zipDecoder.decodeBytes(files[idx].file.readAsBytesSync()), mod.loaders)})")
               .choose())
           .version;
     } else {
@@ -82,7 +81,7 @@ class UploadCommand extends ScatterCommand {
     }
 
     File targetFile;
-    if (mod.artifactLocationDefined() && !args.wasParsed("read-as-file")) {
+    if (mod.artifactLocationDefined && !args.wasParsed("read-as-file")) {
       var targetFileLocation =
           "${mod.artifactDirectory!}${mod.artifactFilenamePattern!.replaceAll("{}", uploadTarget)}";
       targetFile = File(targetFileLocation);
@@ -106,7 +105,7 @@ class UploadCommand extends ScatterCommand {
     String? artifactVersion;
     var archive = zipDecoder.decodeBytes(targetFile.readAsBytesSync());
 
-    artifactVersion = extractVersion(archive, modloader);
+    artifactVersion = extractVersion(archive, mod.loaders);
 
     var parsedGameVersions = <Version>[];
     for (var version in gameVersions) {
