@@ -122,8 +122,11 @@ class UploadCommand extends ScatterCommand {
     var parsedVersion = Version.parse(artifactVersion);
     var displayVersion = Version(parsedVersion.major, parsedVersion.minor, parsedVersion.patch);
 
-    var versionName =
-        "[$minRequiredGameVersion${parsedGameVersions.length > 1 ? "+" : ""}] ${mod.displayName} - $displayVersion";
+    final pattern = mod.versionNamePattern ?? "[{game_version}] {mod_name} - {version}";
+    var versionName = pattern
+        .replaceAll("{game_version}", minRequiredGameVersion)
+        .replaceAll("{mod_name}", mod.displayName)
+        .replaceAll("{version}", displayVersion.toString());
 
     var relations = List.of(mod.relations);
 

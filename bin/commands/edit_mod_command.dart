@@ -69,7 +69,7 @@ class EditCommand extends ScatterCommand {
           }
         } else if (command == "set") {
           if (args.length < 2) {
-            throw "Missing${args.isEmpty ? " property and" : ""} value to set. ${args.isEmpty ? "Available: 'name', 'id', 'modloaders', 'artifact_directory', 'filename_pattern', 'platform_id', 'changelog_location'" : ""}";
+            throw "Missing${args.isEmpty ? " property and" : ""} value to set. ${args.isEmpty ? "Available: 'name', 'id', 'modloaders', 'artifact_directory', 'filename_pattern', 'platform_id', 'changelog_location', 'version_name_pattern'" : ""}";
           }
 
           if (args[0] == "name") {
@@ -123,8 +123,12 @@ class EditCommand extends ScatterCommand {
             var location = input.substring("set changelog_location ".length);
             mod.changelogLocation = location;
             logger.info("Changelog location set to $location");
+          } else if (args[0] == "version_name_pattern") {
+            var namePattern = input.substring("set version_name_pattern ".length);
+            mod.versionNamePattern = namePattern;
+            logger.info("Version name pattern set to $namePattern");
           } else {
-            throw "Invalid property. Available: 'name', 'id', 'modloaders', 'artifact_directory', 'filename_pattern', 'changelog_location'";
+            throw "Invalid property. Available: 'name', 'id', 'modloaders', 'artifact_directory', 'filename_pattern', 'changelog_location', 'version_name_pattern'";
           }
         } else {
           throw "Unknown command. Available: 'save', 'view', 'depmod', 'set'";

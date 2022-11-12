@@ -48,6 +48,7 @@ class ModInfo {
   List<Modloader> loaders;
   String? artifactDirectory, artifactFilenamePattern;
   String? changelogLocation;
+  String? versionNamePattern;
   final Map<String, String> platformIds;
   final List<DependencyInfo> relations;
 

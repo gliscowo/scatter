@@ -17,7 +17,7 @@ import 'commands/remove_mod_command.dart';
 import 'commands/upload_command.dart';
 import 'config/config.dart';
 
-const String version = "0.4.0";
+const String version = "0.4.1";
 
 final client = Client();
 final logger = Logger("scatter");
