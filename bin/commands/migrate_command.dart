@@ -40,7 +40,7 @@ class MigrateCommand extends ScatterCommand {
     logger.info("Adding the following currently stored relations to all versions of '${mod.displayName}' "
         "on Modrinth, backtracking until the given oldest applicable one");
 
-    final applicableRelations = mod.relations.where((element) => element.project_ids.containsKey(modrinth.id));
+    final applicableRelations = mod.relations.where((element) => element.projectIds.containsKey(modrinth.id));
     if (applicableRelations.isEmpty) {
       throw "No relations with known Modrinth IDs found";
     }
@@ -66,7 +66,7 @@ class MigrateCommand extends ScatterCommand {
 
       var deps = version["dependencies"] as List<dynamic>;
       for (var relation in mod.relations) {
-        var modrinthId = relation.project_ids[modrinth.id];
+        var modrinthId = relation.projectIds[modrinth.id];
         if (modrinthId == null) continue;
 
         if (await _projectIdContained(
@@ -114,8 +114,9 @@ class MigrateCommand extends ScatterCommand {
 
   Future<bool> _projectIdContained(Iterable<String> versionIds, String projectId) async {
     for (var version in versionIds) {
-      if (await ModrinthAdapter.instance.projectIdFromVersion(version) != projectId) continue;
-      return true;
+      if (await ModrinthAdapter.instance.projectIdFromVersion(version) == projectId) {
+        return true;
+      }
     }
     return false;
   }
@@ -124,11 +125,11 @@ class MigrateCommand extends ScatterCommand {
     var modified = false;
 
     for (var relation in mod.relations) {
-      if (relation.project_ids.containsKey(ModrinthAdapter.instance.id)) continue;
+      if (relation.projectIds.containsKey(ModrinthAdapter.instance.id)) continue;
 
       final id = await ModrinthAdapter.instance.getIdFromSlug(relation.slug);
       if (id != null) {
-        relation.project_ids[ModrinthAdapter.instance.id] = id;
+        relation.projectIds[ModrinthAdapter.instance.id] = id;
         logger.info("Fetched modrinth id $id for relation ${relation.slug}");
         modified = true;
       } else {

@@ -77,7 +77,7 @@ class ModInfo {
       for (var info in relations) {
         printKeyValuePair("  Slug", info.slug);
         printKeyValuePair("  Type", info.type);
-        printKeyValuePair("  Modrinth ID", info.project_ids[ModrinthAdapter.instance.id]);
+        printKeyValuePair("  Modrinth ID", info.projectIds[ModrinthAdapter.instance.id]);
         print("");
       }
     }
@@ -94,21 +94,21 @@ class ModInfo {
   }
 }
 
-@JsonSerializable()
+@JsonSerializable(fieldRename: FieldRename.snake)
 class DependencyInfo {
   String slug, type;
 
   @JsonKey(defaultValue: <String, String>{})
-  Map<String, String>? platform_ids = {};
-  Map<String, String> get project_ids => platform_ids!;
+  Map<String, String>? platformIds = {};
+  Map<String, String> get projectIds => platformIds!;
 
-  DependencyInfo(this.slug, this.type, this.platform_ids) {
-    if (project_ids.isNotEmpty) return;
-    project_ids[CurseForgeAdapter.instance.id] = slug;
+  DependencyInfo(this.slug, this.type, this.platformIds) {
+    if (projectIds.isNotEmpty) return;
+    projectIds[CurseForgeAdapter.instance.id] = slug;
   }
 
   DependencyInfo.simple(this.slug, this.type) {
-    project_ids[CurseForgeAdapter.instance.id] = slug;
+    projectIds[CurseForgeAdapter.instance.id] = slug;
   }
 
   factory DependencyInfo.fromJson(Map<String, dynamic> json) => _$DependencyInfoFromJson(json);
