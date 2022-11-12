@@ -70,6 +70,7 @@ class ModInfo {
     printKeyValuePair("Artifact directory", artifactDirectory ?? "<undefined>");
     printKeyValuePair("Artifact filename pattern", artifactFilenamePattern ?? "<undefined>");
     printKeyValuePair("Changelog location", changelogLocation ?? "<undefined>");
+    printKeyValuePair("Version name pattern", versionNamePattern ?? "[{game_version}] {mod_name} - {version}");
 
     if (relations.isEmpty) {
       print("No dependencies defined");
