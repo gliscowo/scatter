@@ -22,18 +22,18 @@ class ModrinthAdapter extends HostAdapter {
 
   @override
   Future<List<String>> listVersions() async {
-    var response = await client.read(Uri.parse("$_url/api/v1/tag/game_version"));
+    var response = await client.read(resolve("tag/game_version"));
 
     var parsed = jsonDecode(response);
     if (parsed is! List<dynamic>) throw "Invalid API response";
 
-    return parsed.cast<String>();
+    return parsed.cast<Map<String, dynamic>>().map((e) => e["version"] as String).toList();
   }
 
   @override
   Future<bool> isProject(String id) async {
     try {
-      var response = await client.get(Uri.parse("$_url/api/v1/mod/$id"));
+      var response = await client.get(resolve("project/$id"));
       logger.fine("Response status: ${response.statusCode}");
       logger.fine("Response body: ${response.body.length > 300 ? "<truncated>" : response.body}");
 
@@ -57,6 +57,7 @@ class ModrinthAdapter extends HostAdapter {
     json["version_body"] = spec.changelog;
     json["game_versions"] = spec.gameVersions;
     json["release_channel"] = getName(spec.type);
+    json["featured"] = false;
     json["loaders"] = [for (var loader in mod.loaders) loader.name];
     json["dependencies"] = [
       for (var relation in mod.relations)
@@ -69,7 +70,7 @@ class ModrinthAdapter extends HostAdapter {
 
     logger.fine("Request data: ${encoder.convert(json)}");
 
-    var request = MultipartRequest("POST", Uri.parse("$_url/api/v1/version"));
+    var request = MultipartRequest("POST", resolve("version"));
 
     request
       ..fields["data"] = jsonEncode(json)

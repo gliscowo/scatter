@@ -1,6 +1,6 @@
 name: scatter
 description: A CLI tool for uploading Minecraft Mods to Modrinth, CurseForge and GitHub
-version: 0.4.2
+version: 0.4.3
 homepage: https://docs.wispforest.io/scatter/home/
 publish_to: none
 
