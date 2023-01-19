@@ -1,7 +1,8 @@
 name: scatter
 description: A CLI tool for uploading Minecraft Mods to Modrinth, CurseForge and GitHub
-version: 0.4.1
+version: 0.4.2
 homepage: https://docs.wispforest.io/scatter/home/
+publish_to: none
 
 environment:
   sdk: '>=2.17.0 <3.0.0'
@@ -21,6 +22,10 @@ dependencies:
   json_annotation: ^4.3.0
   json_serializable: ^6.0.0
   logging: ^1.0.2
+  modrinth_api:
+    git:
+      url: https://github.com/gliscowo/modrinth_api
+      ref: 2fef2e0
   path: ^1.8.0
   toml: ^0.13.1
   uri: ^1.0.0

@@ -17,6 +17,9 @@ class MigrateCommand extends ScatterCommand {
 
     argParser.addOption("set-modrinth-relations",
         help: "Go through all existing versions of a mod and add the relations from the database");
+
+    argParser.addOption("clear-featured-flag",
+        help: "Remove the featured flag from all versions of the given mod on Modrinth");
   }
 
   @override
@@ -25,8 +28,40 @@ class MigrateCommand extends ScatterCommand {
       await _executeResolveRelations(args);
     } else if (args.wasParsed("set-modrinth-relations")) {
       await _executeSetRelations(args);
+    } else if (args.wasParsed("clear-featured-flag")) {
+      await _executeClearFeaturedFlag(args);
     } else {
       printUsage();
+    }
+  }
+
+  Future<void> _executeClearFeaturedFlag(ArgResults args) async {
+    final modrinth = ModrinthAdapter.instance;
+    final modId = args["clear-featured-flag"] as String;
+    // ConfigManager.requireMod(modId);
+
+    logger.info("Loading versions");
+
+    final versions = await modrinth.api.getProjectVersions(modId);
+    if (versions == null) {
+      throw "Could not query versions for mod id $modId";
+    }
+
+    print("");
+
+    for (final version in versions) {
+      logger.info("Patching version ${version.name}");
+      final response = await client.patch(
+        modrinth.resolve("version/${version.id}"),
+        body: jsonEncode({"featured": false}),
+        headers: {"Content-Type": "application/json", ...modrinth.authHeader()},
+      );
+
+      if (response.statusCode != 204) {
+        logger.warning("Could not patch -> ${response.body}");
+      }
+
+      await Future.delayed(Duration(milliseconds: 1500));
     }
   }
 
@@ -114,7 +149,7 @@ class MigrateCommand extends ScatterCommand {
 
   Future<bool> _projectIdContained(Iterable<String> versionIds, String projectId) async {
     for (var version in versionIds) {
-      if (await ModrinthAdapter.instance.projectIdFromVersion(version) == projectId) {
+      if ((await ModrinthAdapter.instance.api.getVersion(version))?.projectId == projectId) {
         return true;
       }
     }
@@ -127,7 +162,7 @@ class MigrateCommand extends ScatterCommand {
     for (var relation in mod.relations) {
       if (relation.projectIds.containsKey(ModrinthAdapter.instance.id)) continue;
 
-      final id = await ModrinthAdapter.instance.getIdFromSlug(relation.slug);
+      final id = (await ModrinthAdapter.instance.api.getProject(relation.slug))?.id;
       if (id != null) {
         relation.projectIds[ModrinthAdapter.instance.id] = id;
         logger.info("Fetched modrinth id $id for relation ${relation.slug}");

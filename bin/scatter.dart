@@ -6,6 +6,7 @@ import 'package:http/http.dart';
 import 'package:io/io.dart';
 import 'package:logging/logging.dart';
 
+import 'adapters/modrinth_adapter.dart';
 import 'commands/add_mod_command.dart';
 import 'commands/config_command.dart';
 import 'commands/edit_mod_command.dart';
@@ -17,7 +18,7 @@ import 'commands/remove_mod_command.dart';
 import 'commands/upload_command.dart';
 import 'config/config.dart';
 
-const String version = "0.4.1";
+const String version = "0.4.2";
 
 final client = Client();
 final logger = Logger("scatter");
@@ -90,6 +91,7 @@ void main(List<String> args) async {
     Console.resetAll();
 
     client.close();
+    ModrinthAdapter.instance.api.dispose();
     await sharedStdIn.terminate();
   }
 }

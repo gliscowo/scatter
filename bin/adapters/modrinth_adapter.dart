@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart';
 import 'package:http_parser/http_parser.dart';
+import 'package:modrinth_api/modrinth_api.dart';
 import 'package:path/path.dart';
 
 import '../config/config.dart';
@@ -14,6 +15,8 @@ import 'host_adapter.dart';
 class ModrinthAdapter extends HostAdapter {
   static const String _url = "https://api.modrinth.com";
   static final ModrinthAdapter instance = ModrinthAdapter._();
+
+  final ModrinthApi api = ModrinthApi.createClient("gliscowo/scatter/$version");
 
   ModrinthAdapter._();
 
@@ -55,7 +58,6 @@ class ModrinthAdapter extends HostAdapter {
     json["game_versions"] = spec.gameVersions;
     json["release_channel"] = getName(spec.type);
     json["loaders"] = [for (var loader in mod.loaders) loader.name];
-    json["featured"] = true;
     json["dependencies"] = [
       for (var relation in mod.relations)
         if (relation.projectIds.containsKey(id) && relation.projectIds[id] != null)
@@ -87,27 +89,6 @@ class ModrinthAdapter extends HostAdapter {
     }
 
     return success;
-  }
-
-  Future<String?> getIdFromSlug(String slug) async {
-    final response = await client.get(Uri.parse("$_url/v2/project/$slug"));
-    if (response.statusCode == 404) return null;
-
-    final parsed = jsonDecode(response.body);
-    if (parsed is! Map<String, dynamic>) throw "Invalid API response";
-
-    logger.fine("Slug query response: $parsed");
-    return parsed["id"] as String;
-  }
-
-  Future<String?> projectIdFromVersion(String versionId) async {
-    final response = await client.get(resolve("version/$versionId"));
-    if (response.statusCode != 200) return null;
-
-    final parsed = jsonDecode(response.body);
-    if (parsed is! Map<String, dynamic>) throw "Invalid API response";
-
-    return parsed["project_id"];
   }
 
   Future<dynamic> fetchUnchecked(String route) async {
