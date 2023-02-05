@@ -55,6 +55,7 @@ class ConfigCommand extends ScatterCommand {
       var platform = HostAdapter.fromId(
           (await EntryChooser.horizontal(HostAdapter.platforms, message: "Platform").choose()).toLowerCase());
       var token = await prompt("Token (empty to remove)", secret: true);
+      stdin.echoMode = true;
       print("");
 
       if (token.trim().isEmpty) {
