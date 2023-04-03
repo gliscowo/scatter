@@ -33,7 +33,7 @@ class ModrinthAdapter extends HostAdapter {
   @override
   Future<bool> isProject(String id) async {
     try {
-      var response = await client.get(resolve("project/$id"));
+      var response = await client.get(resolve("project/$id"), headers: authHeader());
       logger.fine("Response status: ${response.statusCode}");
       logger.fine("Response body: ${response.body.length > 300 ? "<truncated>" : response.body}");
 
