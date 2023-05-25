@@ -34,8 +34,8 @@ class AddCommand extends ScatterCommand {
 
     String? artifactDirectory, artifactFilenamePattern;
     if (await ask("Add artifact location")) {
-      artifactDirectory =
-          await promptValidated("Artifact directory", isDirectory, invalidMessage: "This directory does not exist");
+      artifactDirectory = await promptValidated("Artifact directory", (path) => Directory(path).existsSync(),
+          invalidMessage: "This directory does not exist");
       artifactFilenamePattern = await promptValidated("Artifact filename pattern", (input) => input.contains("{}"),
           invalidMessage: "Pattern must contain '{}' placeholder for version");
     }
@@ -61,15 +61,11 @@ class AddCommand extends ScatterCommand {
 
     logger.info("A mod with the following information will be added to the database");
 
-    modInfo.dumpToConsole();
+    modInfo.formatted().printLines();
 
     if (!await ask("Commit")) return;
     ConfigManager.storeMod(modInfo);
     logger.info("Successfully added mod '${modInfo.displayName}' to the database");
-  }
-
-  bool isDirectory(String dir) {
-    return Directory(dir).existsSync();
   }
 
   static Future<Map<String, String>> promptPlatformIds() async {

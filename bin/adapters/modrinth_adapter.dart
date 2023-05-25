@@ -12,7 +12,7 @@ import '../scatter.dart';
 import '../util.dart';
 import 'host_adapter.dart';
 
-class ModrinthAdapter extends HostAdapter {
+final class ModrinthAdapter extends HostAdapter {
   static const String _url = "https://api.modrinth.com";
   static final ModrinthAdapter instance = ModrinthAdapter._();
 
@@ -46,27 +46,26 @@ class ModrinthAdapter extends HostAdapter {
 
   @override
   FutureOr<bool> upload(ModInfo mod, UploadSpec spec) async {
-    var json = <String, dynamic>{};
-    var filename = basename(spec.file.path);
-
-    json["mod_id"] = mod.platformIds[id];
-    json["version_number"] = spec.version;
-    json["file_parts"] = [filename];
-
-    json["version_title"] = spec.name;
-    json["version_body"] = spec.changelog;
-    json["game_versions"] = spec.gameVersions;
-    json["release_channel"] = getName(spec.type);
-    json["featured"] = false;
-    json["loaders"] = [for (var loader in mod.loaders) loader.name];
-    json["dependencies"] = [
-      for (var relation in mod.relations)
-        if (relation.projectIds.containsKey(id) && relation.projectIds[id] != null)
-          {
-            "dependency_type": relation.type == "optional" ? "optional" : "required",
-            "project_id": relation.projectIds[id]
-          }
-    ];
+    final filename = basename(spec.file.path);
+    final json = <String, dynamic>{
+      "mod_id": mod.platformIds[id],
+      "version_number": spec.version,
+      "file_parts": [filename],
+      "version_title": spec.name,
+      "version_body": spec.changelog,
+      "game_versions": spec.gameVersions,
+      "release_channel": getName(spec.type),
+      "featured": false,
+      "loaders": [for (var loader in mod.loaders) loader.name],
+      "dependencies": [
+        for (var relation in mod.relations)
+          if (relation.projectIds.containsKey(id) && relation.projectIds[id] != null)
+            {
+              "dependency_type": relation.type == "optional" ? "optional" : "required",
+              "project_id": relation.projectIds[id]
+            }
+      ]
+    };
 
     logger.fine("Request data: ${encoder.convert(json)}");
 
@@ -106,4 +105,11 @@ class ModrinthAdapter extends HostAdapter {
 
   @override
   String get id => "modrinth";
+
+  @override
+  FutureOr<HttpResult<(), String>> validateToken() {
+    return client
+        .get(resolve("user"), headers: authHeader())
+        .then((value) => value.statusCode == 200 ? Ok(()) : Error(jsonDecode(value.body)["description"] as String));
+  }
 }

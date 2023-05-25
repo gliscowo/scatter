@@ -6,7 +6,7 @@ import 'curseforge_adapter.dart';
 import 'github_adapter.dart';
 import 'modrinth_adapter.dart';
 
-abstract class HostAdapter {
+abstract base class HostAdapter {
   static const List<String> platforms = ["Modrinth", "CurseForge", "GitHub"];
 
   HostAdapter();
@@ -32,4 +32,18 @@ abstract class HostAdapter {
   FutureOr<bool> isProject(String id);
 
   FutureOr<bool> upload(ModInfo mod, UploadSpec spec);
+
+  FutureOr<HttpResult<(), String>> validateToken();
+}
+
+sealed class HttpResult<V, E> {}
+
+class Ok<V, E> extends HttpResult<V, E> {
+  final V result;
+  Ok(this.result);
+}
+
+class Error<V, E> extends HttpResult<V, E> {
+  final E error;
+  Error(this.error);
 }

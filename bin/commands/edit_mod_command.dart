@@ -41,7 +41,7 @@ class EditCommand extends ScatterCommand {
           ConfigManager.save<Database>();
           logger.info("Changes saved");
         } else if (command == "view") {
-          mod.dumpToConsole();
+          mod.formatted().printLines();
         } else if (command == "help") {
           logger.info("Available commands: 'save', 'view', 'depmod', 'set', 'help'");
         } else if (command == "depmod") {

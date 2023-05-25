@@ -91,3 +91,7 @@ extension FancyToString on Version {
     return output.toString();
   }
 }
+
+extension PrintStringList on List<String> {
+  void printLines() => print(join("\n"));
+}

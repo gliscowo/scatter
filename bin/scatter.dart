@@ -16,6 +16,7 @@ import 'commands/migrate_command.dart';
 import 'commands/mod_info_command.dart';
 import 'commands/remove_mod_command.dart';
 import 'commands/upload_command.dart';
+import 'commands/validate_auth_command.dart';
 import 'config/config.dart';
 
 const String version = "0.4.4";
@@ -63,6 +64,7 @@ void main(List<String> args) async {
   runner.addCommand(ListGameVersionsCommand());
   runner.addCommand(ListModsCommand());
   runner.addCommand(MigrateCommand());
+  runner.addCommand(ValidateAuthCommand());
 
   final sigintWatch = ProcessSignal.sigint.watch().listen((event) {
     Console.showCursor();

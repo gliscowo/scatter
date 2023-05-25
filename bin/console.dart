@@ -13,10 +13,12 @@ const String valueColor = "${Console.ANSI_ESCAPE}0m";
 typedef ResponseValidator = FutureOr<bool> Function(String);
 
 void printKeyValuePair(String key, dynamic value, [expectedKeyLength = 30]) {
-  stdout.write("$keyColor$key:${" " * (expectedKeyLength - key.length)}");
-  print("${value is Colorable ? (value).color : valueColor}$value");
+  print(formatKeyValuePair(key, value, expectedKeyLength));
   Console.resetAll();
 }
+
+String formatKeyValuePair(String key, dynamic value, [expectedKeyLength = 30]) =>
+    "$keyColor$key:${" " * (expectedKeyLength - key.length)}${value is Colorable ? (value).color : valueColor}$value";
 
 String color(int rgb) => "${Console.ANSI_ESCAPE}38;2;${rgb >> 16};${(rgb >> 8) & 0xFF};${rgb & 0xFF}m";
 

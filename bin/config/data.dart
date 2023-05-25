@@ -44,7 +44,7 @@ class Database {
 @JsonSerializable(fieldRename: FieldRename.snake)
 class ModInfo {
   String displayName, modId;
-  @JsonKey(fromJson: _parseVersions, name: "modloader")
+  @JsonKey(fromJson: _parseLoaders, name: "modloader")
   List<Modloader> loaders;
   String? artifactDirectory, artifactFilenamePattern;
   String? changelogLocation;
@@ -60,32 +60,32 @@ class ModInfo {
 
   bool get artifactLocationDefined => artifactFilenamePattern != null && artifactDirectory != null;
 
-  void dumpToConsole() {
-    printKeyValuePair("Name", "$displayName ($modId)");
-    printKeyValuePair("Modloaders", [for (var loader in loaders) loader.name]);
-    platformIds.forEach((key, value) {
-      printKeyValuePair("$key project id", value);
-    });
+  List<String> formatted() {
+    final result = [
+      formatKeyValuePair("Name", "$displayName ($modId)"),
+      formatKeyValuePair("Modloaders", [for (var loader in loaders) loader.name]),
+      for (final entry in platformIds.entries) formatKeyValuePair("${entry.key} project id", entry.value),
+      formatKeyValuePair("Artifact directory", artifactDirectory ?? "<undefined>"),
+      formatKeyValuePair("Artifact filename pattern", artifactFilenamePattern ?? "<undefined>"),
+      formatKeyValuePair("Changelog location", changelogLocation ?? "<undefined>"),
+      formatKeyValuePair("Version name pattern", versionNamePattern ?? "[{game_version}] {mod_name} - {version}"),
+      if (relations.isEmpty)
+        "No dependencies defined"
+      else ...[
+        "Dependencies:",
+        for (final info in relations) ...[
+          formatKeyValuePair("  Slug", info.slug),
+          formatKeyValuePair("  Type", info.type),
+          formatKeyValuePair("  Modrinth ID", info.projectIds[ModrinthAdapter.instance.id]),
+          "",
+        ],
+      ]
+    ];
 
-    printKeyValuePair("Artifact directory", artifactDirectory ?? "<undefined>");
-    printKeyValuePair("Artifact filename pattern", artifactFilenamePattern ?? "<undefined>");
-    printKeyValuePair("Changelog location", changelogLocation ?? "<undefined>");
-    printKeyValuePair("Version name pattern", versionNamePattern ?? "[{game_version}] {mod_name} - {version}");
-
-    if (relations.isEmpty) {
-      print("No dependencies defined");
-    } else {
-      print("Dependencies:");
-      for (var info in relations) {
-        printKeyValuePair("  Slug", info.slug);
-        printKeyValuePair("  Type", info.type);
-        printKeyValuePair("  Modrinth ID", info.projectIds[ModrinthAdapter.instance.id]);
-        print("");
-      }
-    }
+    return result;
   }
 
-  static List<Modloader> _parseVersions(Object json) {
+  static List<Modloader> _parseLoaders(Object json) {
     if (json is String) {
       return [Modloader.values.byName(json)];
     } else if (json is List<dynamic>) {
