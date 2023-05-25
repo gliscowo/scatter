@@ -55,7 +55,7 @@ final class ModrinthAdapter extends HostAdapter {
       "version_title": spec.name,
       "version_body": spec.changelog,
       "game_versions": spec.gameVersions,
-      "release_channel": getName(spec.type),
+      "release_channel": spec.type.name,
       "featured": false,
       "loaders": [for (var loader in mod.loaders) loader.name],
       "dependencies": [

@@ -2,26 +2,35 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:archive/archive.dart';
-import 'package:console/console.dart';
+import 'package:collection/collection.dart';
 import 'package:toml/toml.dart';
 import 'package:version/version.dart';
 
+import 'color.dart' as c;
 import 'config/data.dart';
 import 'console.dart';
 
 const JsonEncoder encoder = JsonEncoder.withIndent("    ");
 
-enum Modloader { fabric, forge, quilt }
+enum Modloader {
+  fabric,
+  forge,
+  quilt,
+}
 
-enum DependencyType { optional, required, embedded }
+enum DependencyType {
+  optional,
+  required,
+  embedded,
+}
 
-enum ReleaseType implements Colorable {
-  release(Color.GREEN),
-  beta(Color.YELLOW),
-  alpha(Color.RED);
+enum ReleaseType implements Formattable {
+  release(c.green),
+  beta(c.yellow),
+  alpha(c.red);
 
   @override
-  final Color color;
+  final c.AnsiControlSequence color;
   const ReleaseType(this.color);
 }
 
@@ -36,47 +45,32 @@ class UploadSpec {
   UploadSpec(this.file, this.name, this.version, this.changelog, this.type, this.gameVersions, this.declaredRelations);
 }
 
-bool Function(String) enumMatcher(List<Enum> enumValues) {
-  return (string) => enumValues.any((element) => getName(element) == string);
-}
-
-T getEnum<T extends Enum>(List<T> enumValues, String name) {
-  return enumValues.singleWhere((element) => getName(element) == name);
-}
-
-String getName<T extends Enum>(T instance) {
-  return instance.toString().split('.')[1];
-}
+bool hasValue(List<Enum> values, String valueName) => values.any((element) => element.name == valueName);
 
 String extractVersion(Archive archive, List<Modloader> loaders) {
-  String readSingleLoader(Modloader loader) {
+  String? tryReadVersion(Modloader loader) {
     switch (loader) {
       case Modloader.quilt:
-        var qmjFile = archive.findFile("quilt.mod.json");
-        if (qmjFile == null) throw "The provided artifact is not a quilt mod";
-        return jsonDecode(utf8.decode(qmjFile.content))["quilt_loader"]["version"];
+        final qmjFile = archive.findFile("quilt.mod.json");
+        return qmjFile != null ? jsonDecode(utf8.decode(qmjFile.content))["quilt_loader"]["version"] : null;
       case Modloader.fabric:
-        var fmjFile = archive.findFile("fabric.mod.json");
-        if (fmjFile == null) throw "The provided artifact is not a fabric mod";
-        return jsonDecode(utf8.decode(fmjFile.content))["version"];
+        final fmjFile = archive.findFile("fabric.mod.json");
+        return fmjFile != null ? jsonDecode(utf8.decode(fmjFile.content))["version"] : null;
       case Modloader.forge:
-        var modTomlFile = archive.findFile("META-INF/mods.toml");
-        if (modTomlFile == null) throw "The provided artifact is not a forge mod";
-        return TomlDocument.parse(utf8.decode(modTomlFile.content)).toMap()["mods"][0]["version"];
+        final modTomlFile = archive.findFile("META-INF/mods.toml");
+        return modTomlFile != null
+            ? TomlDocument.parse(utf8.decode(modTomlFile.content)).toMap()["mods"][0]["version"]
+            : null;
     }
   }
 
-  if (loaders.length == 1) {
-    return readSingleLoader(loaders.first);
-  } else {
-    for (var loader in loaders) {
-      try {
-        return readSingleLoader(loader);
-        // ignore: empty_catches
-      } catch (e) {}
-    }
-    throw "Could not extract version from any known mod metadata file";
+  final version = loaders.map(tryReadVersion).firstWhereOrNull((element) => element != null);
+  if (version == null) {
+    throw StateError(
+        "Could not extract version from metadata for any of the following loaders: ${loaders.map((e) => e.name).join(",")}");
   }
+
+  return version;
 }
 
 extension FancyToString on Version {

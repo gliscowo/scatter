@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:console/console.dart';
 import 'package:http/http.dart';
 import 'package:http_parser/http_parser.dart';
 
+import '../color.dart' as c;
 import '../config/config.dart';
 import '../config/data.dart';
 import '../console.dart';
@@ -31,7 +31,7 @@ final class CurseForgeAdapter extends HostAdapter {
     for (Map<String, dynamic> version in parsed) {
       if (version["gameVersionTypeID"] == 3 || version["gameVersionTypeID"] == 73247) continue;
       results.add(
-          "${Color.WHITE}Name: ${Color.DARK_BLUE}${version["name"]} ${Color.GRAY}| ${Color.WHITE}Slug: ${Color.DARK_BLUE}${version["slug"]}");
+          "${c.white}Name: ${c.blue}${version["name"]} ${c.brightBlack}| ${c.white}Slug: ${c.blue}${version["slug"]}");
     }
 
     return results;
@@ -69,7 +69,7 @@ final class CurseForgeAdapter extends HostAdapter {
         continue;
       }
 
-      mappedGameVersions.add(await prompt("Enter CurseForge equivalent of snapshot version $version"));
+      mappedGameVersions.add(prompt("Enter CurseForge equivalent of snapshot version $version"));
     }
 
     mappedGameVersions
@@ -87,7 +87,7 @@ final class CurseForgeAdapter extends HostAdapter {
     json["changelogType"] = "markdown";
     json["displayName"] = spec.name;
     json["gameVersions"] = versions.toList();
-    json["releaseType"] = getName(spec.type);
+    json["releaseType"] = spec.type.name;
 
     if (spec.declaredRelations.isNotEmpty) {
       var relationsList = <Map<String, dynamic>>[];

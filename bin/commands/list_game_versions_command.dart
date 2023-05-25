@@ -19,7 +19,7 @@ class ListGameVersionsCommand extends ScatterCommand {
 
       if (args.wasParsed("filter")) versions.removeWhere((element) => !element.contains(args["filter"]));
 
-      if (versions.length > 50 && !await ask("Print all ${versions.length} versions")) return;
+      if (versions.length > 50 && !ask("Print all ${versions.length} versions")) return;
 
       versions.forEach(print);
     } catch (err, stack) {

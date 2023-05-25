@@ -71,7 +71,7 @@ class UploadCommand extends ScatterCommand {
 
       logger.info("The following versions were found:");
 
-      uploadTarget = (await (EntryChooser.vertical(files, selectedEntry: files.length - 1)
+      uploadTarget = ((EntryChooser.vertical(files, selectedEntry: files.length - 1)
                 ..formatter = (p0, idx) =>
                     "${files[idx].version} (${extractVersion(zipDecoder.decodeBytes(files[idx].file.readAsBytesSync()), mod.loaders)})")
               .choose())
@@ -91,11 +91,11 @@ class UploadCommand extends ScatterCommand {
 
     if (!targetFile.existsSync()) throw "Unable to find artifact file: '${targetFile.path}'";
 
-    var type = await chooseEnum(ReleaseType.values, message: "Release type");
+    var type = chooseEnum(ReleaseType.values, message: "Release type");
 
     var gameVersions = ConfigManager.getDefaultVersions();
     if (args.wasParsed("override-game-versions")) {
-      var userVersions = (await util.prompt("Comma-separated game versions")).split(",");
+      var userVersions = (util.prompt("Comma-separated game versions")).split(",");
       gameVersions.clear();
       gameVersions.addAll(userVersions.map((e) => e.trim()));
     } else if (gameVersions.isEmpty) {
@@ -132,7 +132,7 @@ class UploadCommand extends ScatterCommand {
 
     if (args.wasParsed("confirm-relations")) {
       for (var dep in mod.relations) {
-        if (await util.ask("Declare dependency '${dep.slug}'")) continue;
+        if (util.ask("Declare dependency '${dep.slug}'")) continue;
         relations.remove(dep);
       }
     }
@@ -154,14 +154,14 @@ class UploadCommand extends ScatterCommand {
     logger.info("A build with following metadata will be published");
     util.printKeyValuePair("Name", versionName, 15);
     util.printKeyValuePair("Version", artifactVersion, 15);
-    util.printKeyValuePair("Release Type", getName(type), 15);
-    if (!await util.ask("Proceed")) return;
+    util.printKeyValuePair("Release Type", type.name, 15);
+    if (!util.ask("Proceed")) return;
 
     for (var platform in HostAdapter.platforms) {
       if (!mod.platformIds.keys.contains(platform.toLowerCase())) continue;
 
       var adapter = HostAdapter.fromId(platform.toLowerCase());
-      if (args.wasParsed("confirm") && !await util.ask("Upload to $platform")) continue;
+      if (args.wasParsed("confirm") && !util.ask("Upload to $platform")) continue;
 
       logger.info("Uploading to $platform");
       await adapter.upload(mod, spec);

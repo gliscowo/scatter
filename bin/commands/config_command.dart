@@ -32,7 +32,7 @@ class ConfigCommand extends ScatterCommand {
       logger.info("Config file location: ${ConfigManager.getFilePath(configType)}");
     } else if (args.wasParsed("export")) {
       var exportFile = File("scatter_config_export.json");
-      if (exportFile.existsSync() && !await ask("File '${exportFile.path}' already exists. Overwrite")) return;
+      if (exportFile.existsSync() && !ask("File '${exportFile.path}' already exists. Overwrite")) return;
 
       exportFile.writeAsStringSync(ConfigManager.export());
       logger.info("Config exported to '${exportFile.path}'");
@@ -44,8 +44,7 @@ class ConfigCommand extends ScatterCommand {
       logger.info("Config imported");
     } else if (args.wasParsed("set-changelog-mode")) {
       final config = ConfigManager.get<Config>();
-      final mode =
-          await chooseEnum(ChangelogMode.values, message: "Changelog mode", selected: config.defaultChangelogMode);
+      final mode = chooseEnum(ChangelogMode.values, message: "Changelog mode", selected: config.defaultChangelogMode);
 
       config.defaultChangelogMode = mode;
       ConfigManager.save<Config>();
@@ -53,8 +52,8 @@ class ConfigCommand extends ScatterCommand {
       logger.info("Default changelog mode updated to '${mode.name}'");
     } else if (args.wasParsed("tokens")) {
       var platform = HostAdapter.fromId(
-          (await EntryChooser.horizontal(HostAdapter.platforms, message: "Platform").choose()).toLowerCase());
-      var token = await prompt("Token (empty to remove)", secret: true);
+          (EntryChooser.horizontal(HostAdapter.platforms, message: "Platform").choose()).toLowerCase());
+      var token = prompt("Token (empty to remove)", secret: true);
       stdin.echoMode = true;
       print("");
 
@@ -72,7 +71,7 @@ class ConfigCommand extends ScatterCommand {
 
       String version;
       do {
-        version = (await prompt("Version")).trim();
+        version = (prompt("Version")).trim();
 
         if (version == "#") {
           logger.info("Current default versions: ${ConfigManager.getDefaultVersions()}");

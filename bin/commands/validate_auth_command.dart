@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:args/src/arg_results.dart';
-import 'package:console/console.dart';
 
 import '../adapters/host_adapter.dart';
+import '../color.dart' as c;
 import 'scatter_command.dart';
 
 class ValidateAuthCommand extends ScatterCommand {
@@ -15,18 +15,9 @@ class ValidateAuthCommand extends ScatterCommand {
       final adapter = HostAdapter.fromId(platform.toLowerCase());
       switch (await adapter.validateToken()) {
         case Ok():
-          print(TextPen()
-            ..text("$platform: ")
-            ..green()
-            ..text("✓")
-            ..normal());
+          print("$platform: ${c.green}✓${c.reset}");
         case Error(:var error):
-          print(TextPen()
-            ..text("$platform: ")
-            ..red()
-            ..text("⚠  ")
-            ..normal()
-            ..text(error));
+          print("$platform: ${c.red}⚠  $error${c.reset}");
       }
     }
   }

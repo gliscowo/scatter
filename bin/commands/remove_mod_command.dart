@@ -15,7 +15,7 @@ class RemoveCommand extends ScatterCommand {
 
     if (mod == null) throw "No mod with id '$modId' found in database";
 
-    if (!await ask("Remove mod '${mod.displayName}' from the database")) return;
+    if (!ask("Remove mod '${mod.displayName}' from the database")) return;
 
     if (!ConfigManager.removeMod(modId)) throw "Could not remove '$modId' from the database";
     logger.info("'${mod.displayName}' successfully removed");

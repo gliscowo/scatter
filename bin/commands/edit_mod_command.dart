@@ -1,10 +1,9 @@
 import 'dart:io';
 
 import 'package:args/src/arg_results.dart';
-import 'package:console/console.dart';
-import 'package:io/io.dart';
 
 import '../adapters/host_adapter.dart';
+import '../color.dart' as c;
 import '../config/config.dart';
 import '../config/data.dart';
 import '../scatter.dart';
@@ -25,7 +24,7 @@ class EditCommand extends ScatterCommand {
 
     while (true) {
       stdout.write("scatter > ");
-      var input = await sharedStdIn.nextLine();
+      var input = console.readLine()!;
 
       var args = (input).split(' ');
       var command = args.removeAt(0);
@@ -52,7 +51,7 @@ class EditCommand extends ScatterCommand {
             var slug = args[1];
             var type = args[2];
 
-            if (!enumMatcher(DependencyType.values)(type)) throw "Invalid dependency type";
+            if (!hasValue(DependencyType.values, type)) throw "Invalid dependency type";
 
             mod.relations.add(DependencyInfo.simple(slug, type));
             logger.info("'$slug' added as '$type' dependency");
@@ -93,7 +92,7 @@ class EditCommand extends ScatterCommand {
             var loaders = args[1].split(",");
 
             for (final loader in loaders) {
-              if (!enumMatcher(Modloader.values)(loader)) {
+              if (!hasValue(Modloader.values, loader)) {
                 throw "Unknown modloader '$loader'. Available: 'fabric', 'forge', 'quilt'";
               }
             }
@@ -134,7 +133,7 @@ class EditCommand extends ScatterCommand {
           throw "Unknown command. Available: 'save', 'view', 'depmod', 'set'";
         }
       } on String catch (msg) {
-        print(TextPen().red().text(msg).normal());
+        print("${c.red}$msg${c.reset}");
       } catch (err, stack) {
         logger.severe("Caught exception while editing mod", err, stack);
       }

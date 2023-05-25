@@ -1,45 +1,43 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:console/console.dart';
-import 'package:io/io.dart';
-
+import 'color.dart' as c;
 import 'scatter.dart';
 
-final String inputColor = color(0x0AA1DD);
-final String keyColor = color(0xFCA17D);
-const String valueColor = "${Console.ANSI_ESCAPE}0m";
+final String inputColor = rgbColor(0x0AA1DD);
+final String keyColor = rgbColor(0xFCA17D);
+const String valueColor = "${c.ansiEscape}0m";
 
 typedef ResponseValidator = FutureOr<bool> Function(String);
 
 void printKeyValuePair(String key, dynamic value, [expectedKeyLength = 30]) {
   print(formatKeyValuePair(key, value, expectedKeyLength));
-  Console.resetAll();
+  console.resetColorAttributes();
 }
 
 String formatKeyValuePair(String key, dynamic value, [expectedKeyLength = 30]) =>
-    "$keyColor$key:${" " * (expectedKeyLength - key.length)}${value is Colorable ? (value).color : valueColor}$value";
+    "$keyColor$key:${" " * (expectedKeyLength - key.length)}${value is Formattable ? (value).color : valueColor}$value";
 
-String color(int rgb) => "${Console.ANSI_ESCAPE}38;2;${rgb >> 16};${(rgb >> 8) & 0xFF};${rgb & 0xFF}m";
+String rgbColor(int rgb) => "${c.ansiEscape}38;2;${rgb >> 16};${(rgb >> 8) & 0xFF};${rgb & 0xFF}m";
 
-Future<bool> ask(String question, {secret = false}) async {
-  Console.adapter.write("$inputColor$question? [Y/n] ");
-  Console.resetAll();
+bool ask(String question, {secret = false}) {
+  console.write("$inputColor$question? [y/N] ");
+  console.resetColorAttributes();
 
-  return sharedStdIn.nextLine().then((value) => value.toLowerCase().trim() == "y");
+  return console.readKey().char.toLowerCase() == "y";
 }
 
-Future<String> prompt(String message, {secret = false}) async {
-  Console.adapter.write("$inputColor$message: ");
-  Console.resetAll();
+String prompt(String message, {secret = false}) {
+  console.write("$inputColor$message: ");
+  console.resetColorAttributes();
 
-  if (secret) stdin.echoMode = false;
-  return secret
-      ? sharedStdIn.nextLine()
-      : sharedStdIn.nextLine().then((value) {
-          stdin.echoMode = true;
-          return value;
-        });
+  if (!secret) return console.readLine()!;
+
+  stdin.echoMode = false;
+  final input = console.readLine();
+  stdin.echoMode = true;
+
+  return input!;
 }
 
 Future<String> promptValidated(String message, ResponseValidator validator,
@@ -47,10 +45,10 @@ Future<String> promptValidated(String message, ResponseValidator validator,
   String? response;
 
   do {
-    Console.adapter.write("$inputColor$message: ");
-    Console.resetAll();
+    console.write("$inputColor$message: ");
+    console.resetColorAttributes();
 
-    var input = await sharedStdIn.nextLine();
+    var input = console.readLine()!;
     if ((emptyIsValid && input.trim().isEmpty) || await validator(input)) {
       response = input;
     } else if (invalidMessage != null) {
@@ -61,6 +59,6 @@ Future<String> promptValidated(String message, ResponseValidator validator,
   return response;
 }
 
-abstract class Colorable {
-  Color get color;
+abstract class Formattable {
+  c.AnsiControlSequence get color;
 }

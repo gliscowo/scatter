@@ -24,16 +24,16 @@ class AddCommand extends ScatterCommand {
 
     logger.info("Adding a new mod with id '$modId' to the database");
 
-    var displayName = await prompt("Display Name");
-    var loaders = [await chooseEnum(Modloader.values, message: "Modloader")];
-    while (await ask("Add more")) {
-      loaders.add(await chooseEnum(Modloader.values, message: "Modloader"));
+    var displayName = prompt("Display Name");
+    var loaders = [chooseEnum(Modloader.values, message: "Modloader")];
+    while (ask("Add more")) {
+      loaders.add(chooseEnum(Modloader.values, message: "Modloader"));
     }
 
     Map<String, String> platformIds = await promptPlatformIds();
 
     String? artifactDirectory, artifactFilenamePattern;
-    if (await ask("Add artifact location")) {
+    if (ask("Add artifact location")) {
       artifactDirectory = await promptValidated("Artifact directory", (path) => Directory(path).existsSync(),
           invalidMessage: "This directory does not exist");
       artifactFilenamePattern = await promptValidated("Artifact filename pattern", (input) => input.contains("{}"),
@@ -41,19 +41,19 @@ class AddCommand extends ScatterCommand {
     }
 
     String? changelogLocation;
-    if (await ask("Add changelog file location")) {
-      changelogLocation = await prompt("Changelog file location");
+    if (ask("Add changelog file location")) {
+      changelogLocation = prompt("Changelog file location");
     }
 
     List<DependencyInfo> relations = [];
-    if (await ask("Add dependencies")) {
+    if (ask("Add dependencies")) {
       String slug, type;
       do {
         logger.info("Adding dependency");
-        slug = await prompt("Slug");
-        type = (await chooseEnum(DependencyType.values, message: "Type for dependency '$slug'")).name;
+        slug = prompt("Slug");
+        type = (chooseEnum(DependencyType.values, message: "Type for dependency '$slug'")).name;
         relations.add(DependencyInfo.simple(slug, type));
-      } while (await ask("'$slug' added as '$type' dependency. Add more"));
+      } while (ask("'$slug' added as '$type' dependency. Add more"));
     }
 
     var modInfo = ModInfo(displayName, modId, loaders, platformIds, relations, artifactDirectory,
@@ -63,7 +63,7 @@ class AddCommand extends ScatterCommand {
 
     modInfo.formatted().printLines();
 
-    if (!await ask("Commit")) return;
+    if (!ask("Commit")) return;
     ConfigManager.storeMod(modInfo);
     logger.info("Successfully added mod '${modInfo.displayName}' to the database");
   }

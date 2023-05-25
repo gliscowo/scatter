@@ -34,7 +34,7 @@ final class GitHubAdapter extends HostAdapter {
     var createUrl = Uri.parse("${_url("api")}/repos/${mod.platformIds["github"]}/releases");
     var data = {"tag_name": spec.version, "name": spec.version, "body": spec.changelog};
 
-    var target = await prompt("Git tag target (empty for HEAD on remote main branch)");
+    var target = prompt("Git tag target (empty for HEAD on remote main branch)");
     if (target.isNotEmpty) data["target_commitish"] = target.trim();
 
     logger.fine("Creating release at '$createUrl'");

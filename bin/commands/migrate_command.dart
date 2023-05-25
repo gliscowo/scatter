@@ -70,7 +70,7 @@ class MigrateCommand extends ScatterCommand {
     final modId = args["set-modrinth-relations"] as String;
     final mod = ConfigManager.requireMod(modId);
 
-    final oldestVersion = await prompt("Oldest applicable version (empty for none)");
+    final oldestVersion = prompt("Oldest applicable version (empty for none)");
 
     logger.info("Adding the following currently stored relations to all versions of '${mod.displayName}' "
         "on Modrinth, backtracking until the given oldest applicable one");
@@ -84,7 +84,7 @@ class MigrateCommand extends ScatterCommand {
       print(" - ${relation.slug}");
     }
 
-    if (!await ask("\nProceed")) return;
+    if (!ask("\nProceed")) return;
 
     final versionList = await modrinth.fetchUnchecked("project/${modrinth.idOf(mod)}/version");
     logger.fine("Version query response: $versionList");
