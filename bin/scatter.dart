@@ -18,8 +18,7 @@ import 'commands/remove_mod_command.dart';
 import 'commands/upload_command.dart';
 import 'commands/validate_auth_command.dart';
 import 'config/config.dart';
-
-const String version = "0.4.4";
+import 'version.dart';
 
 final client = Client();
 final logger = Logger("scatter");
@@ -78,7 +77,7 @@ void main(List<String> args) async {
 
     var parseResults = runner.parse(args.where((element) => element != "-v"));
     if (parseResults.wasParsed("version")) {
-      logger.info("scatter $version");
+      logger.info("scatter $packageVersion");
       return;
     }
 

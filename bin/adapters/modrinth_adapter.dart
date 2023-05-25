@@ -10,13 +10,14 @@ import '../config/config.dart';
 import '../config/data.dart';
 import '../scatter.dart';
 import '../util.dart';
+import '../version.dart';
 import 'host_adapter.dart';
 
 final class ModrinthAdapter extends HostAdapter {
   static const String _url = "https://api.modrinth.com";
   static final ModrinthAdapter instance = ModrinthAdapter._();
 
-  final ModrinthApi api = ModrinthApi.createClient("gliscowo/scatter/$version");
+  final ModrinthApi api = ModrinthApi.createClient("gliscowo/scatter/$packageVersion");
 
   ModrinthAdapter._();
 

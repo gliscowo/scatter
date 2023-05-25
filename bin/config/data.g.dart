@@ -15,13 +15,18 @@ Map<String, dynamic> _$TokensToJson(Tokens instance) => <String, dynamic>{
     };
 
 Config _$ConfigFromJson(Map<String, dynamic> json) => Config(
-      (json['default_target_versions'] as List<dynamic>).map((e) => e as String).toList(),
-      $enumDecodeNullable(_$ChangelogModeEnumMap, json['default_changelog_mode']) ?? ChangelogMode.editor,
+      (json['default_target_versions'] as List<dynamic>)
+          .map((e) => e as String)
+          .toList(),
+      $enumDecodeNullable(
+              _$ChangelogModeEnumMap, json['default_changelog_mode']) ??
+          ChangelogMode.editor,
     );
 
 Map<String, dynamic> _$ConfigToJson(Config instance) => <String, dynamic>{
       'default_target_versions': instance.defaultTargetVersions,
-      'default_changelog_mode': _$ChangelogModeEnumMap[instance.defaultChangelogMode]!,
+      'default_changelog_mode':
+          _$ChangelogModeEnumMap[instance.defaultChangelogMode]!,
     };
 
 const _$ChangelogModeEnumMap = {
@@ -45,7 +50,9 @@ ModInfo _$ModInfoFromJson(Map<String, dynamic> json) => ModInfo(
       json['mod_id'] as String,
       ModInfo._parseLoaders(json['modloader'] as Object),
       Map<String, String>.from(json['platform_ids'] as Map),
-      (json['relations'] as List<dynamic>).map((e) => DependencyInfo.fromJson(e as Map<String, dynamic>)).toList(),
+      (json['relations'] as List<dynamic>)
+          .map((e) => DependencyInfo.fromJson(e as Map<String, dynamic>))
+          .toList(),
       json['artifact_directory'] as String?,
       json['artifact_filename_pattern'] as String?,
       json['changelog_location'] as String?,
@@ -69,7 +76,8 @@ const _$ModloaderEnumMap = {
   Modloader.quilt: 'quilt',
 };
 
-DependencyInfo _$DependencyInfoFromJson(Map<String, dynamic> json) => DependencyInfo(
+DependencyInfo _$DependencyInfoFromJson(Map<String, dynamic> json) =>
+    DependencyInfo(
       json['slug'] as String,
       json['type'] as String,
       (json['platform_ids'] as Map<String, dynamic>?)?.map(
@@ -78,7 +86,8 @@ DependencyInfo _$DependencyInfoFromJson(Map<String, dynamic> json) => Dependency
           {},
     );
 
-Map<String, dynamic> _$DependencyInfoToJson(DependencyInfo instance) => <String, dynamic>{
+Map<String, dynamic> _$DependencyInfoToJson(DependencyInfo instance) =>
+    <String, dynamic>{
       'slug': instance.slug,
       'type': instance.type,
       'platform_ids': instance.platformIds,
