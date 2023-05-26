@@ -1,11 +1,12 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:args/command_runner.dart';
 import 'package:args/src/arg_results.dart';
 
-import '../adapters/host_adapter.dart';
-import '../color.dart' as c;
 import '../config/config.dart';
 import '../config/data.dart';
+import '../console.dart';
 import '../scatter.dart';
 import '../util.dart';
 import 'scatter_command.dart';
@@ -22,121 +23,178 @@ class EditCommand extends ScatterCommand {
     logger.info("Type 'done' to exit and save changes, 'save' to save changes");
     logger.info("Type 'quit' to exit without saving changes");
 
-    while (true) {
-      stdout.write("scatter > ");
-      var input = console.readLine()!;
+    final runner = CommandRunner<bool>("scatter >", "")
+      ..usageFooter
+      ..addCommand(PrimitiveCommand.simple("view", "View the current mod configuration", () => print(mod.format())))
+      ..addCommand(PrimitiveCommand.simple("save", "Save changes", () => ConfigManager.save<Database>()))
+      ..addCommand(PrimitiveCommand("quit", "Quit this interface without saving", () => true))
+      ..addCommand(PrimitiveCommand("done", "Save changes and quit this interface", () {
+        ConfigManager.save<Database>();
+        return true;
+      }))
+      ..addCommand(DepmodCommand(mod))
+      ..addCommand(SetPropertyCommand(mod));
 
-      var args = (input).split(' ');
-      var command = args.removeAt(0);
+    while (true) {
+      console.write("scatter > ");
+      var input = console.readLine(cancelOnBreak: true);
+      if (input == null) return;
 
       try {
-        if (command == "quit") {
-          break;
-        } else if (command == "done") {
-          ConfigManager.save<Database>();
-          logger.info("Changes saved");
-          break;
-        } else if (command == "save") {
-          ConfigManager.save<Database>();
-          logger.info("Changes saved");
-        } else if (command == "view") {
-          print(mod.format());
-        } else if (command == "help") {
-          logger.info("Available commands: 'save', 'view', 'depmod', 'set', 'help'");
-        } else if (command == "depmod") {
-          if (args.isEmpty) throw "Missing subcommand. Usage: 'depmod <subcommand> [arguments]'";
-
-          if (args[0] == "add") {
-            if (args.length < 3) throw "Missing arguments. Usage: 'depmod add <slug> <type>'";
-            var slug = args[1];
-            var type = args[2];
-
-            if (!hasValue(DependencyType.values, type)) throw "Invalid dependency type";
-
-            mod.relations.add(DependencyInfo.simple(slug, type));
-            logger.info("'$slug' added as '$type' dependency");
-          } else if (args[0] == "remove") {
-            if (args.length < 2) throw "Missing arguments. Usage: 'depmod remove <slug>'";
-            var slug = args[1];
-
-            if (!mod.relations.any((element) => element.slug == slug)) throw "No dependency with slug '$slug' found";
-
-            mod.relations.removeWhere((element) => element.slug == slug);
-            logger.info("Dependency '$slug' removed");
-          } else {
-            throw "Unknown subcommand. Available: 'add', 'remove'";
-          }
-        } else if (command == "set") {
-          if (args.length < 2) {
-            throw "Missing${args.isEmpty ? " property and" : ""} value to set. ${args.isEmpty ? "Available: 'name', 'id', 'modloaders', 'artifact_directory', 'filename_pattern', 'platform_id', 'changelog_location', 'version_name_pattern'" : ""}";
-          }
-
-          if (args[0] == "name") {
-            var newName = input.substring("set name ".length);
-            mod.displayName = newName;
-            logger.info("Mod name changed to '$newName'");
-          } else if (args[0] == "id") {
-            if (args.length < 3 || args[2] != "confirm") {
-              throw "This operation will forcibly save all changes and exit edit mode. Append 'confirm' to your command to execute";
-            }
-
-            ConfigManager.removeMod(mod.modId);
-
-            mod.modId = args[1];
-            ConfigManager.storeMod(mod);
-
-            logger.info("Mod id changed to '${args[1]}'");
-            logger.info("Changes saved");
-            break;
-          } else if (args[0] == "modloaders") {
-            var loaders = args[1].split(",");
-
-            for (final loader in loaders) {
-              if (!hasValue(Modloader.values, loader)) {
-                throw "Unknown modloader '$loader'. Available: 'fabric', 'forge', 'quilt'";
-              }
-            }
-
-            mod.loaders = loaders.map((e) => Modloader.values.byName(e)).toList();
-            logger.info("Modloaders set to '${args[1]}'");
-          } else if (args[0] == "platform_id") {
-            if (args.length < 3) throw "Missing ${args.length < 2 ? "platform and " : ""}id to set";
-
-            var platform = args[1];
-            var id = args[2];
-
-            HostAdapter.fromId(platform);
-
-            mod.platformIds[platform] = id;
-
-            logger.info("'$platform' id set to '$id'");
-          } else if (args[0] == "artifact_directory") {
-            var dir = input.substring("set artifact_directory ".length);
-            mod.artifactDirectory = dir;
-            logger.info("Artifact directory set to $dir");
-          } else if (args[0] == "filename_pattern") {
-            var pattern = input.substring("set filename_pattern ".length);
-            mod.artifactFilenamePattern = pattern;
-            logger.info("Artifact filename pattern set to $pattern");
-          } else if (args[0] == "changelog_location") {
-            var location = input.substring("set changelog_location ".length);
-            mod.changelogLocation = location;
-            logger.info("Changelog location set to $location");
-          } else if (args[0] == "version_name_pattern") {
-            var namePattern = input.substring("set version_name_pattern ".length);
-            mod.versionNamePattern = namePattern;
-            logger.info("Version name pattern set to $namePattern");
-          } else {
-            throw "Invalid property. Available: 'name', 'id', 'modloaders', 'artifact_directory', 'filename_pattern', 'changelog_location', 'version_name_pattern'";
-          }
-        } else {
-          throw "Unknown command. Available: 'save', 'view', 'depmod', 'set'";
-        }
-      } on String catch (msg) {
-        print("${c.red}$msg${c.reset}");
-      } catch (err, stack) {
-        logger.severe("Caught exception while editing mod", err, stack);
+        final result = await runner.run(input.split(' '));
+        if (result != null && result) break;
+      } on UsageException catch (_) {
+        runner.printUsage();
       }
     }
+  }
+}
+
+class PrimitiveCommand extends Command<bool> {
+  @override
+  final String name, description;
+  final bool Function() callback;
+
+  PrimitiveCommand(this.name, this.description, this.callback);
+  PrimitiveCommand.simple(this.name, this.description, void Function() callback)
+      : callback = (() {
+          callback();
+          return false;
+        });
+
+  @override
+  FutureOr<bool> run() => callback();
+}
+
+class SetPropertyCommand extends Command<bool> {
+  static final _props = <String, dynamic Function(ModInfo, String)>{
+    "version_name_pattern": (mod, value) => mod.versionNamePattern = value,
+    "changelog_location": (mod, value) => mod.changelogLocation = value,
+    "artifact_directory": (mod, value) => mod.artifactDirectory = value,
+    "artifact_filename_pattern": (mod, value) => mod.artifactFilenamePattern = value,
+    "id": (mod, value) {
+      if (!ask("This operation will forcibly save all changes and exit edit mode. Continue")) return false;
+
+      ConfigManager.removeMod(mod.modId);
+
+      mod.modId = value;
+      ConfigManager.storeMod(mod);
+
+      logger.info("Mod ID changed to '$value'");
+      logger.info("Changes saved");
+      exit(0);
+    },
+    "modloaders": (mod, value) {
+      final loaders = value.split(",");
+      for (final loader in loaders) {
+        if (!hasValue(Modloader.values, loader)) {
+          logger.warning("Unknown modloader '$loader'. Available: 'fabric', 'forge', 'quilt'");
+          return;
+        }
+      }
+
+      mod.loaders = loaders.map((e) => Modloader.values.byName(e)).toList();
+    }
+  };
+
+  final ModInfo _mod;
+  SetPropertyCommand(this._mod);
+
+  @override
+  String get description => "Set a mod property";
+  @override
+  String get name => "set-prop";
+  @override
+  String get usage => super.usage.replaceFirst(
+        "[arguments]",
+        "<property> <value>\nValid Properties:\n${_props.keys.map((e) => "   $e").join("\n")}\n",
+      );
+
+  @override
+  FutureOr<bool> run() {
+    if (argResults!.rest case [var prop, var value]) {
+      if (!_props.containsKey(prop)) {
+        logger.warning("Invalid property");
+        return false;
+      }
+
+      final result = _props[prop]!(_mod, value);
+
+      if (result is! bool || result) logger.info("property '$prop' updated to '$value'");
+    } else {
+      logger.severe("Invalid arguments");
+      printUsage();
+    }
+    return false;
+  }
+}
+
+class DepmodCommand extends Command<bool> {
+  @override
+  String get description => "Modify the mod's dependencies";
+  @override
+  String get name => "depmod";
+
+  DepmodCommand(ModInfo mod) {
+    addSubcommand(DepmodAddCommand(mod));
+    addSubcommand(DepmodRemoveCommand(mod));
+  }
+}
+
+class DepmodAddCommand extends Command<bool> {
+  final ModInfo _mod;
+  DepmodAddCommand(this._mod);
+
+  @override
+  String get description => "Add a dependency";
+  @override
+  String get name => "add";
+  @override
+  String get usage => super.usage.replaceFirst("[arguments]", "<slug> <type>");
+
+  @override
+  FutureOr<bool> run() {
+    if (argResults!.rest case [var slug, var type]) {
+      if (!hasValue(DependencyType.values, type)) {
+        logger.warning("Unknown dependency type");
+        return false;
+      }
+
+      _mod.relations.add(DependencyInfo.simple(slug, type));
+      logger.info("'$slug' added as '$type' dependency");
+    } else {
+      logger.severe("Invalid arguments");
+      printUsage();
+    }
+    return false;
+  }
+}
+
+class DepmodRemoveCommand extends Command<bool> {
+  final ModInfo _mod;
+  DepmodRemoveCommand(this._mod);
+
+  @override
+  String get description => "Remove a dependency";
+  @override
+  String get name => "remove";
+  @override
+  String get usage => super.usage.replaceFirst("[arguments]", "<slug>");
+
+  @override
+  FutureOr<bool> run() {
+    if (argResults!.rest case [var slug]) {
+      if (_mod.relations.any((element) => element.slug == slug)) {
+        _mod.relations.removeWhere((element) => element.slug == slug);
+        logger.info("Dependency '$slug' removed");
+      } else {
+        logger.warning("no dependency with slug $slug");
+      }
+    } else {
+      logger.severe("Invalid arguments");
+      printUsage();
+    }
+
+    return false;
   }
 }
