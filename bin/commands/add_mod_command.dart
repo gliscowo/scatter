@@ -61,7 +61,7 @@ class AddCommand extends ScatterCommand {
 
     logger.info("A mod with the following information will be added to the database");
 
-    modInfo.formatted().printLines();
+    print(modInfo.format());
 
     if (!ask("Commit")) return;
     ConfigManager.storeMod(modInfo);

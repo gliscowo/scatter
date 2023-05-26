@@ -1,9 +1,9 @@
+import 'package:dart_console/dart_console.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 import '../adapters/curseforge_adapter.dart';
 import '../adapters/modrinth_adapter.dart';
 import '../commands/upload_command.dart';
-import '../console.dart';
 import '../util.dart';
 
 part 'data.g.dart';
@@ -58,31 +58,46 @@ class ModInfo {
   factory ModInfo.fromJson(Map<String, dynamic> json) => _$ModInfoFromJson(json);
   Map<String, dynamic> toJson() => _$ModInfoToJson(this);
 
-  bool get artifactLocationDefined => artifactFilenamePattern != null && artifactDirectory != null;
+  bool get hasArtifactLocation => artifactFilenamePattern != null && artifactDirectory != null;
 
-  List<String> formatted() {
-    final result = [
-      formatKeyValuePair("Name", "$displayName ($modId)"),
-      formatKeyValuePair("Modloaders", [for (var loader in loaders) loader.name]),
-      for (final entry in platformIds.entries) formatKeyValuePair("${entry.key} project id", entry.value),
-      formatKeyValuePair("Artifact directory", artifactDirectory ?? "<undefined>"),
-      formatKeyValuePair("Artifact filename pattern", artifactFilenamePattern ?? "<undefined>"),
-      formatKeyValuePair("Changelog location", changelogLocation ?? "<undefined>"),
-      formatKeyValuePair("Version name pattern", versionNamePattern ?? "[{game_version}] {mod_name} - {version}"),
-      if (relations.isEmpty)
-        "No dependencies defined"
-      else ...[
-        "Dependencies:",
-        for (final info in relations) ...[
-          formatKeyValuePair("  Slug", info.slug),
-          formatKeyValuePair("  Type", info.type),
-          formatKeyValuePair("  Modrinth ID", info.projectIds[ModrinthAdapter.instance.id]),
-          "",
+  String format() {
+    final modInfo = Table()
+      ..title = "$displayName ($modId)"
+      ..insertRows([
+        [
+          "Modloaders",
+          [for (var loader in loaders) loader.name]
         ],
-      ]
-    ];
+        []
+      ])
+      ..insertRows([
+        for (final entry in platformIds.entries) ["${entry.key} project id", entry.value],
+        []
+      ])
+      ..insertRow(["Artifact directory", artifactDirectory ?? "<undefined>"])
+      ..insertRow(["Artifact filename pattern", artifactFilenamePattern ?? "<undefined>"])
+      ..insertRow(["Changelog location", changelogLocation ?? "<undefined>"]);
 
-    return result;
+    final dependencies = Table();
+
+    if (relations.isNotEmpty) {
+      dependencies
+        ..title = "Dependencies"
+        ..insertColumn(header: "Slug")
+        ..insertColumn(header: "Type")
+        ..insertColumn(header: "Modrinth ID")
+        ..insertRows(relations
+            .map((info) => [info.slug, info.type, info.projectIds[ModrinthAdapter.instance.id] ?? "<undefined>"])
+            .toList());
+
+      final info = modInfo.render();
+      final deps = dependencies.render().split("\n");
+      final padding = ((info.split("\n").first.length - deps.first.length) ~/ 2) - 1;
+
+      return info + deps.map((e) => " " * padding + e).join("\n");
+    } else {
+      return modInfo.render();
+    }
   }
 
   static List<Modloader> _parseLoaders(Object json) {

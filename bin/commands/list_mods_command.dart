@@ -3,7 +3,6 @@ import 'package:args/args.dart';
 import '../config/config.dart';
 import '../config/data.dart';
 import '../console.dart';
-import '../util.dart';
 import 'scatter_command.dart';
 
 class ListModsCommand extends ScatterCommand {
@@ -17,7 +16,7 @@ class ListModsCommand extends ScatterCommand {
 
     ConfigManager.get<Database>().mods.forEach((id, mod) {
       if (verbose) {
-        mod.formatted().printLines();
+        print(mod.format());
         print("");
       } else {
         printKeyValuePair(id, mod.displayName);

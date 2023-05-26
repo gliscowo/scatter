@@ -44,7 +44,7 @@ class UploadCommand extends ScatterCommand {
 
     String uploadTarget;
     if (args.rest.length < 2) {
-      if (!mod.artifactLocationDefined) {
+      if (!mod.hasArtifactLocation) {
         throw "No artifact location defined, artifact search is unavailable. Usage: 'scatter upload <mod> <version>'";
       }
 
@@ -81,7 +81,7 @@ class UploadCommand extends ScatterCommand {
     }
 
     File targetFile;
-    if (mod.artifactLocationDefined && !args.wasParsed("read-as-file")) {
+    if (mod.hasArtifactLocation && !args.wasParsed("read-as-file")) {
       var targetFileLocation =
           "${mod.artifactDirectory!}${mod.artifactFilenamePattern!.replaceAll("{}", uploadTarget)}";
       targetFile = File(targetFileLocation);

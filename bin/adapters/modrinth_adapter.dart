@@ -48,7 +48,7 @@ final class ModrinthAdapter extends HostAdapter {
   @override
   FutureOr<bool> upload(ModInfo mod, UploadSpec spec) async {
     final filename = basename(spec.file.path);
-    final json = <String, dynamic>{
+    final json = {
       "mod_id": mod.platformIds[id],
       "version_number": spec.version,
       "file_parts": [filename],

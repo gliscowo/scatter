@@ -2,7 +2,6 @@ import 'package:args/src/arg_results.dart';
 
 import '../config/config.dart';
 import '../scatter.dart';
-import '../util.dart';
 import 'scatter_command.dart';
 
 class InfoCommand extends ScatterCommand {
@@ -15,7 +14,7 @@ class InfoCommand extends ScatterCommand {
     if (mod == null) {
       logger.warning("Mod not found");
     } else {
-      mod.formatted().printLines();
+      print(mod.format());
     }
   }
 }
