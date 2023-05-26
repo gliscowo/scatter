@@ -30,7 +30,6 @@ class ValidateAuthCommand extends ScatterCommand {
         ..insertRows([
           for (var MapEntry(key: platform, value: msg) in results.entries) [platform, _truncate(msg, 50)]
         ])
-        ..borderType = BorderType.grid
         ..render(),
     );
   }
