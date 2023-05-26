@@ -57,7 +57,7 @@ final class GitHubAdapter extends HostAdapter {
       return false;
     }
 
-    var uploadUrl = UriTemplate(responseData["upload_url"]).expand({"name": basename(spec.file.path)});
+    var uploadUrl = UriTemplate(responseData["upload_url"] as String).expand({"name": basename(spec.file.path)});
     var uploadRequest = Request("POST", Uri.parse(uploadUrl));
 
     logger.fine("Creating upload request");

@@ -28,7 +28,7 @@ final class CurseForgeAdapter extends HostAdapter {
 
     List<String> results = [];
 
-    for (Map<String, dynamic> version in parsed) {
+    for (Map<String, dynamic> version in parsed.cast()) {
       if (version["gameVersionTypeID"] == 3 || version["gameVersionTypeID"] == 73247) continue;
       results.add(
           "${c.white}Name: ${c.blue}${version["name"]} ${c.brightBlack}| ${c.white}Slug: ${c.blue}${version["slug"]}");
@@ -61,7 +61,7 @@ final class CurseForgeAdapter extends HostAdapter {
     var parsed = jsonDecode(response);
     if (parsed is! List<dynamic>) throw "Invalid API response";
 
-    var mappedGameVersions = [];
+    var mappedGameVersions = <String>[];
 
     for (var version in spec.gameVersions) {
       if (!_snapshotRegex.hasMatch(version)) {
@@ -77,7 +77,7 @@ final class CurseForgeAdapter extends HostAdapter {
     var versions = <int>{};
     for (var version in mappedGameVersions) {
       try {
-        versions.add(parsed.firstWhere((element) => element["name"] == version)["id"]);
+        versions.add(parsed.firstWhere((element) => element["name"] == version)["id"] as int);
       } catch (err) {
         throw "Could not locate CurseForge mapping for version '$version'";
       }

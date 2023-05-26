@@ -10,12 +10,12 @@ const String valueColor = "${c.ansiEscape}0m";
 
 typedef ResponseValidator = FutureOr<bool> Function(String);
 
-void printKeyValuePair(String key, dynamic value, [expectedKeyLength = 30]) {
+void printKeyValuePair(String key, dynamic value, [int expectedKeyLength = 30]) {
   print(formatKeyValuePair(key, value, expectedKeyLength));
   console.resetColorAttributes();
 }
 
-String formatKeyValuePair(String key, dynamic value, [expectedKeyLength = 30]) =>
+String formatKeyValuePair(String key, dynamic value, [int expectedKeyLength = 30]) =>
     "$keyColor$key:${" " * (expectedKeyLength - key.length)}${value is Formattable ? (value).color : valueColor}$value";
 
 String rgbColor(int rgb) => "${c.ansiEscape}38;2;${rgb >> 16};${(rgb >> 8) & 0xFF};${rgb & 0xFF}m";
@@ -24,20 +24,20 @@ bool ask(String question, {secret = false}) {
   console.write("$inputColor$question? [y/N] ");
   console.resetColorAttributes();
 
-  return console.readKey().char.toLowerCase() == "y";
+  return stdin.readLineSync()?.toLowerCase() == "y";
 }
 
-String prompt(String message, {secret = false}) {
+String prompt(String message, {bool secret = false}) {
   console.write("$inputColor$message: ");
   console.resetColorAttributes();
 
-  if (!secret) return console.readLine()!;
+  if (!secret) return console.readLine() ?? "";
 
   stdin.echoMode = false;
   final input = console.readLine();
   stdin.echoMode = true;
 
-  return input!;
+  return input ?? "";
 }
 
 Future<String> promptValidated(String message, ResponseValidator validator,

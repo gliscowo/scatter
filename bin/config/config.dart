@@ -11,13 +11,17 @@ typedef Deserializer<T> = T Function(Map<String, dynamic> json);
 class ConfigManager {
   ConfigManager._();
 
-  static final Map<Type, ConfigStore> _configs = {
+  static final Map<Type, ConfigStore<dynamic>> _configs = {
     Config: ConfigStore<Config>(Config([], ChangelogMode.editor), Config.fromJson, "config"),
     Database: ConfigStore<Database>(Database({}), Database.fromJson, "database"),
-    Tokens: ConfigStore<Tokens>(Tokens({}), Tokens.fromJson, "tokens")
+    Tokens: ConfigStore<Tokens>(Tokens({}), Tokens.fromJson, "tokens"),
   };
 
-  static const Map<String, Type> typesByName = {"config": Config, "database": Database, "tokens": Tokens};
+  static const Map<String, Type> typesByName = {
+    "config": Config,
+    "database": Database,
+    "tokens": Tokens,
+  };
 
   static void loadConfigs() {
     Directory(_getConfigDirectory()).createSync(recursive: true);
@@ -91,7 +95,7 @@ class ConfigManager {
   // Import / Export
 
   static String export() {
-    var exportData = {};
+    var exportData = <String, dynamic>{};
     exportData["config"] = get<Config>();
     exportData["database"] = get<Database>();
 
@@ -100,8 +104,8 @@ class ConfigManager {
 
   static void import(String json) {
     var exportData = jsonDecode(json);
-    _configs[Config]!.deserialize(exportData["config"]);
-    _configs[Database]!.deserialize(exportData["database"]);
+    _configs[Config]!.deserialize(exportData["config"] as Map<String, dynamic>);
+    _configs[Database]!.deserialize(exportData["database"] as Map<String, dynamic>);
     save<Config>();
     save<Database>();
   }
@@ -131,7 +135,7 @@ class ConfigManager {
 }
 
 class ConfigStore<T> {
-  final Deserializer deserializer;
+  final Deserializer<T> deserializer;
   final File file;
 
   T data;
@@ -146,7 +150,7 @@ class ConfigStore<T> {
       file.createSync();
       file.writeAsStringSync(encoder.convert(data));
     } else {
-      deserialize(jsonDecode(file.readAsStringSync()));
+      deserialize(jsonDecode(file.readAsStringSync()) as Map<String, dynamic>);
     }
   }
 

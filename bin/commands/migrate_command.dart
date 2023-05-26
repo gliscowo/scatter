@@ -61,7 +61,7 @@ class MigrateCommand extends ScatterCommand {
         logger.warning("Could not patch -> ${response.body}");
       }
 
-      await Future.delayed(Duration(milliseconds: 1500));
+      await Future<()>.delayed(Duration(milliseconds: 1500));
     }
   }
 

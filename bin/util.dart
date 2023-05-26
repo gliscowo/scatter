@@ -52,14 +52,16 @@ String extractVersion(Archive archive, List<Modloader> loaders) {
     switch (loader) {
       case Modloader.quilt:
         final qmjFile = archive.findFile("quilt.mod.json");
-        return qmjFile != null ? jsonDecode(utf8.decode(qmjFile.content))["quilt_loader"]["version"] : null;
+        return qmjFile != null
+            ? jsonDecode(utf8.decode(qmjFile.content as List<int>))["quilt_loader"]["version"] as String
+            : null;
       case Modloader.fabric:
         final fmjFile = archive.findFile("fabric.mod.json");
-        return fmjFile != null ? jsonDecode(utf8.decode(fmjFile.content))["version"] : null;
+        return fmjFile != null ? jsonDecode(utf8.decode(fmjFile.content as List<int>))["version"] as String : null;
       case Modloader.forge:
         final modTomlFile = archive.findFile("META-INF/mods.toml");
         return modTomlFile != null
-            ? TomlDocument.parse(utf8.decode(modTomlFile.content)).toMap()["mods"][0]["version"]
+            ? TomlDocument.parse(utf8.decode(modTomlFile.content as List<int>)).toMap()["mods"][0]["version"] as String
             : null;
     }
   }

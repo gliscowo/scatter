@@ -37,7 +37,7 @@ class ConfigCommand extends ScatterCommand {
       exportFile.writeAsStringSync(ConfigManager.export());
       logger.info("Config exported to '${exportFile.path}'");
     } else if (args.wasParsed("import")) {
-      var exportFile = File(args["import"]);
+      var exportFile = File(args["import"] as String);
       if (!exportFile.existsSync()) throw "File does not exist";
 
       ConfigManager.import(exportFile.readAsStringSync());

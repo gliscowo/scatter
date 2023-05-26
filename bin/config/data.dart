@@ -89,7 +89,7 @@ class ModInfo {
     if (json is String) {
       return [Modloader.values.byName(json)];
     } else if (json is List<dynamic>) {
-      return json.map((e) => Modloader.values.byName(e)).toList();
+      return json.cast<String>().map((e) => Modloader.values.byName(e)).toList();
     } else {
       throw ArgumentError.value(json, "modloader", "could not read modloaders from json");
     }
