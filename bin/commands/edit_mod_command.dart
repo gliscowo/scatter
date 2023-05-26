@@ -105,7 +105,7 @@ class SetPropertyCommand extends Command<bool> {
   @override
   String get name => "set-prop";
   @override
-  String get usage => super.usage.replaceFirst(
+  String get invocation => super.invocation.replaceFirst(
         "[arguments]",
         "<property> <value>\nValid Properties:\n${_props.keys.map((e) => "   $e").join("\n")}\n",
       );
@@ -131,9 +131,7 @@ class SetPropertyCommand extends Command<bool> {
 
 class DepmodCommand extends Command<bool> {
   @override
-  String get description => "Modify the mod's dependencies";
-  @override
-  String get name => "depmod";
+  final String name = "depmod", description = "Modify the mod's dependencies";
 
   DepmodCommand(ModInfo mod) {
     addSubcommand(DepmodAddCommand(mod));
@@ -146,11 +144,10 @@ class DepmodAddCommand extends Command<bool> {
   DepmodAddCommand(this._mod);
 
   @override
-  String get description => "Add a dependency";
+  final String name = "add", description = "Add a dependency";
+
   @override
-  String get name => "add";
-  @override
-  String get usage => super.usage.replaceFirst("[arguments]", "<slug> <type>");
+  String get invocation => super.invocation.replaceFirst("[arguments]", "<slug> <type>");
 
   @override
   FutureOr<bool> run() {
@@ -179,7 +176,7 @@ class DepmodRemoveCommand extends Command<bool> {
   @override
   String get name => "remove";
   @override
-  String get usage => super.usage.replaceFirst("[arguments]", "<slug>");
+  String get invocation => super.invocation.replaceFirst("[arguments]", "<slug>");
 
   @override
   FutureOr<bool> run() {

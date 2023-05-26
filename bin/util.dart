@@ -2,9 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:archive/archive.dart';
-import 'package:collection/collection.dart';
 import 'package:toml/toml.dart';
-import 'package:version/version.dart';
 
 import 'color.dart' as c;
 import 'config/data.dart';
@@ -66,7 +64,7 @@ String extractVersion(Archive archive, List<Modloader> loaders) {
     }
   }
 
-  final version = loaders.map(tryReadVersion).firstWhereOrNull((element) => element != null);
+  final version = loaders.map(tryReadVersion).firstWhere((element) => element != null, orElse: () => null);
   if (version == null) {
     throw StateError(
         "Could not extract version from metadata for any of the following loaders: ${loaders.map((e) => e.name).join(",")}");
@@ -75,15 +73,15 @@ String extractVersion(Archive archive, List<Modloader> loaders) {
   return version;
 }
 
-extension FancyToString on Version {
-  String toFancyString() {
-    final StringBuffer output = StringBuffer("$major.$minor${patch != 0 ? ".$patch" : ""}");
-    if (preRelease.isNotEmpty) {
-      output.write("-${preRelease.join('.')}");
-    }
-    if (build.trim().isNotEmpty) {
-      output.write("+${build.trim()}");
-    }
-    return output.toString();
-  }
-}
+// extension FancyToString on Version {
+//   String toFancyString() {
+//     final StringBuffer output = StringBuffer("$major.$minor${patch != 0 ? ".$patch" : ""}");
+//     if (preRelease.isNotEmpty) {
+//       output.write("-${preRelease.join('.')}");
+//     }
+//     if (build.trim().isNotEmpty) {
+//       output.write("+${build.trim()}");
+//     }
+//     return output.toString();
+//   }
+// }

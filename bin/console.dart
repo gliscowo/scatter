@@ -33,9 +33,9 @@ String prompt(String message, {bool secret = false}) {
 
   if (!secret) return console.readLine() ?? "";
 
-  stdin.echoMode = false;
-  final input = console.readLine();
-  stdin.echoMode = true;
+  stdin.echo = false;
+  final input = stdin.readLineSync();
+  stdin.echo = true;
 
   return input ?? "";
 }
@@ -61,4 +61,32 @@ Future<String> promptValidated(String message, ResponseValidator validator,
 
 abstract class Formattable {
   c.AnsiControlSequence get color;
+}
+
+extension ModeExtensions on Stdin {
+  static bool _echo = stdin.echoMode;
+  static bool _line = stdin.lineMode;
+
+  void saveStateAndDisableEcho() {
+    _echo = echoMode;
+    _line = lineMode;
+
+    echo = false;
+    line = false;
+  }
+
+  void restoreState() {
+    echo = _echo;
+    line = _line;
+  }
+
+  set echo(bool echo) {
+    if (echoMode == echo) return;
+    echoMode = echo;
+  }
+
+  set line(bool line) {
+    if (lineMode == line) return;
+    lineMode = line;
+  }
 }

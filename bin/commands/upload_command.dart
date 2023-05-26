@@ -5,7 +5,7 @@ import 'package:archive/archive.dart';
 import 'package:archive/archive_io.dart';
 import 'package:args/src/arg_results.dart';
 import 'package:path/path.dart';
-import 'package:version/version.dart';
+import 'package:pub_semver/pub_semver.dart';
 
 import '../adapters/host_adapter.dart';
 import '../chooser.dart';
@@ -18,19 +18,20 @@ import 'scatter_command.dart';
 
 class UploadCommand extends ScatterCommand {
   UploadCommand() : super("upload", "Upload the given artifact to all available hosts") {
-    argParser.addFlag("override-game-versions",
-        abbr: "o", negatable: false, help: "Prompt which game versions to use instead of using the default ones");
-    argParser.addFlag("read-as-file",
-        abbr: "f",
-        negatable: false,
-        help: "Always interpret the second argument as a file, even if an artifact location is defined");
-    argParser.addFlag("confirm",
-        abbr: "c", negatable: false, help: "Whether uploading to each individual platform should be confirmed");
-    argParser.addFlag("confirm-relations",
-        abbr: "r", negatable: false, help: "Ask for each dependency whether it should be declared");
-    argParser.addOption("changelog-mode", help: "Override the default changelog mode", abbr: "l");
-    argParser.addFlag("preserve-file",
-        help: "Preserve the contents of the changelog file in editor mode", abbr: "p", negatable: false);
+    argParser
+      ..addFlag("override-game-versions",
+          abbr: "o", negatable: false, help: "Prompt which game versions to use instead of using the default ones")
+      ..addFlag("read-as-file",
+          abbr: "f",
+          negatable: false,
+          help: "Always interpret the second argument as a file, even if an artifact location is defined")
+      ..addFlag("confirm",
+          abbr: "c", negatable: false, help: "Whether uploading to each individual platform should be confirmed")
+      ..addFlag("confirm-relations",
+          abbr: "r", negatable: false, help: "Ask for each dependency whether it should be declared")
+      ..addOption("changelog-mode", help: "Override the default changelog mode", abbr: "l")
+      ..addFlag("preserve-file",
+          help: "Preserve the contents of the changelog file in editor mode", abbr: "p", negatable: false);
   }
 
   @override
@@ -52,30 +53,32 @@ class UploadCommand extends ScatterCommand {
       var fileRegex = RegExp(namePattern!.replaceAll("{}", ".+\\"));
 
       var artifactDir = Directory(mod.artifactDirectory!);
-      var files = (artifactDir
+      var files = artifactDir
           .listSync()
           .whereType<File>()
           .where((element) =>
               fileRegex.hasMatch(basename(element.path)) &&
               !element.path.contains("dev") &&
               !element.path.contains("sources"))
-          .map((file) => _FileWithVersion(
-              file,
-              basename(file.path)
-                  .replaceAll(namePattern.split("{}")[0], "")
-                  .replaceAll(namePattern.split("{}")[1], "")))
-          .toList())
-        ..sort((a, b) => _tryParse(a.version).compareTo(_tryParse(b.version)));
+          .map((file) => (
+                file: file,
+                version: basename(file.path)
+                    .replaceAll(namePattern.split("{}")[0], "")
+                    .replaceAll(namePattern.split("{}")[1], "")
+              ))
+          .toList()
+        ..sort((a, b) => _tryParseVersion(a.version).compareTo(_tryParseVersion(b.version)));
 
       if (files.isEmpty) throw "No artifacts found";
 
       logger.info("The following versions were found:");
 
-      uploadTarget = ((EntryChooser.vertical(files, selectedEntry: files.length - 1)
-                ..formatter = (p0, idx) =>
-                    "${files[idx].version} (${extractVersion(zipDecoder.decodeBytes(files[idx].file.readAsBytesSync()), mod.loaders)})")
-              .choose())
-          .version;
+      uploadTarget = EntryChooser.vertical(
+        files,
+        selectedEntry: files.length - 1,
+        formatter: (p0, idx) =>
+            "${files[idx].version} (${extractVersion(zipDecoder.decodeBytes(files[idx].file.readAsBytesSync()), mod.loaders)})",
+      ).choose().version;
     } else {
       uploadTarget = args.rest[1];
     }
@@ -116,7 +119,7 @@ class UploadCommand extends ScatterCommand {
     }
 
     String minRequiredGameVersion = parsedGameVersions.isNotEmpty
-        ? parsedGameVersions.reduce((value, element) => value < element ? value : element).toFancyString()
+        ? parsedGameVersions.reduce((value, element) => value < element ? value : element).toString()
         : gameVersions[0].toString();
 
     var parsedVersion = Version.parse(artifactVersion);
@@ -169,18 +172,12 @@ class UploadCommand extends ScatterCommand {
   }
 }
 
-Version _tryParse(String input) {
+Version _tryParseVersion(String input) {
   try {
     return Version.parse(input);
-  } catch (e) {
-    return Version(0, 0, 0);
+  } catch (_) {
+    return Version.none;
   }
-}
-
-class _FileWithVersion {
-  final File file;
-  final String version;
-  _FileWithVersion(this.file, this.version);
 }
 
 const String changelogPreset = """
@@ -211,13 +208,13 @@ enum ChangelogMode {
     // we pause the main isolate's event loop here to stop processing stdin events
     // i still don't quite understand why it sometimes just eats them, but it literally makes
     // vim unusable. thus, the vim isolate exists only for waking the main isolate once vim is done
-    await Isolate.spawn<ResumeInfo>((message) async {
+    await Isolate.spawn<(Isolate, Capability)>((message) async {
       final editor = String.fromEnvironment("EDITOR", defaultValue: Platform.isWindows ? "notepad" : "vi");
       await Process.start(editor, ["changelog.md"], mode: ProcessStartMode.inheritStdio)
           .then((value) => value.exitCode);
 
-      message.resume();
-    }, ResumeInfo(Isolate.current, Isolate.current.pause()));
+      message.$1.resume(message.$2);
+    }, (Isolate.current, Isolate.current.pause()));
 
     return _readFile(changelogFile);
   }
@@ -241,16 +238,5 @@ enum ChangelogMode {
 
       return lines.join("\n");
     });
-  }
-}
-
-class ResumeInfo {
-  final Isolate isolate;
-  final Capability capability;
-
-  ResumeInfo(this.isolate, this.capability);
-
-  void resume() {
-    isolate.resume(capability);
   }
 }
