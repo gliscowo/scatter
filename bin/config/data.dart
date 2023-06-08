@@ -68,11 +68,11 @@ class ModInfo {
           "Modloaders",
           [for (var loader in loaders) loader.name]
         ],
-        []
+        const []
       ])
       ..insertRows([
         for (final entry in platformIds.entries) ["${entry.key} project id", entry.value],
-        []
+        const []
       ])
       ..insertRow(["Artifact directory", artifactDirectory ?? "<undefined>"])
       ..insertRow(["Artifact filename pattern", artifactFilenamePattern ?? "<undefined>"])

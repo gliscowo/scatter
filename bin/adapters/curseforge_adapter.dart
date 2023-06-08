@@ -17,6 +17,8 @@ final class CurseForgeAdapter extends HostAdapter {
   static final RegExp _snapshotRegex = RegExp("([0-9]{2}w[0-9]{2}[a-z])|(.+-(pre|rc)[0-9])");
   static final CurseForgeAdapter instance = CurseForgeAdapter._();
 
+  static const _blacklistedVersions = [9970, 9974];
+
   CurseForgeAdapter._();
 
   @override
@@ -31,7 +33,7 @@ final class CurseForgeAdapter extends HostAdapter {
     for (Map<String, dynamic> version in parsed.cast()) {
       if (version["gameVersionTypeID"] == 3 || version["gameVersionTypeID"] == 73247) continue;
       results.add(
-          "${c.white}Name: ${c.blue}${version["name"]} ${c.brightBlack}| ${c.white}Slug: ${c.blue}${version["slug"]}");
+          "${c.white}Name: ${c.blue}${version["name"]} ${c.brightBlack}| ${c.white}ID: ${c.blue}${version["id"]} ${c.brightBlack}| ${c.white}Slug: ${c.blue}${version["slug"]} ${c.brightBlack}| ${c.white}Type ID: ${c.blue}${version["gameVersionTypeID"]}");
     }
 
     return results;
@@ -77,7 +79,9 @@ final class CurseForgeAdapter extends HostAdapter {
     var versions = <int>{};
     for (var version in mappedGameVersions) {
       try {
-        versions.add(parsed.firstWhere((element) => element["name"] == version)["id"] as int);
+        versions.add(parsed.firstWhere(
+                (element) => element["name"] == version && !_blacklistedVersions.contains(element["id"] as int))["id"]
+            as int);
       } catch (err) {
         throw "Could not locate CurseForge mapping for version '$version'";
       }

@@ -68,10 +68,7 @@ void main(List<String> args) async {
     ..addCommand(MigrateCommand())
     ..addCommand(ValidateAuthCommand());
 
-  final sigintWatch = ProcessSignal.sigint.watch().listen((event) {
-    console.showCursor();
-    exit(exitCode);
-  });
+  final sigintWatch = ProcessSignal.sigint.watch().listen((event) => console.showCursor());
 
   try {
     var parseResults = runner.parse(args);
