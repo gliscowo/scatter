@@ -29,16 +29,11 @@ abstract class EntryChooser<T> {
 
   factory EntryChooser.vertical(List<T> entries, {int selectedEntry = 0, EntryFormatter<T>? formatter}) {
     return VerticalChooser(entries, selectedEntry, formatter: formatter);
-    // return Platform.isWindows ? WindowsChooser(entries, selectedEntry) : VerticalChooser(entries, selectedEntry);
   }
 
   factory EntryChooser.horizontal(List<T> entries,
       {String? message, int selectedEntry = 0, EntryFormatter<T>? formatter}) {
     return HorizontalChooser(entries, selectedEntry, message, formatter: formatter);
-
-    // return Platform.isWindows
-    //     ? WindowsChooser(entries, selectedEntry, message: message)
-    //     : HorizontalChooser(entries, selectedEntry, message);
   }
 
   T choose() {
@@ -52,6 +47,7 @@ abstract class EntryChooser<T> {
     while (true) {
       final key = console.readKey();
       if (key.controlChar == ControlCharacter.enter) break;
+      if (key.controlChar == ControlCharacter.ctrlC) scatterExit(1);
 
       if (key.controlChar == _bindings[0]) {
         _selectedEntry = max(0, min(_selectedEntry - 1, _entries.length - 1));

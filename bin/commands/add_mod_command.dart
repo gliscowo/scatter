@@ -12,7 +12,7 @@ import '../util.dart';
 import 'scatter_command.dart';
 
 class AddCommand extends ScatterCommand {
-  AddCommand() : super("add", "Add a mod to the database", requiredArgCount: 1);
+  AddCommand() : super("add", "Add a mod to the database", arguments: ["mod-id"]);
 
   @override
   void execute(ArgResults args) async {
@@ -25,10 +25,10 @@ class AddCommand extends ScatterCommand {
     logger.info("Adding a new mod with id '$modId' to the database");
 
     var displayName = prompt("Display Name");
-    var loaders = [chooseEnum(Modloader.values, message: "Modloader")];
-    while (ask("Add more")) {
+    var loaders = <Modloader>[];
+    do {
       loaders.add(chooseEnum(Modloader.values, message: "Modloader"));
-    }
+    } while (ask("Add more"));
 
     Map<String, String> platformIds = await promptPlatformIds();
 

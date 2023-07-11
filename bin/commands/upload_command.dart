@@ -17,29 +17,49 @@ import '../util.dart';
 import 'scatter_command.dart';
 
 class UploadCommand extends ScatterCommand {
-  UploadCommand() : super("upload", "Upload the given artifact to all available hosts") {
+  UploadCommand() : super("upload", "Upload the given artifact to all available hosts", arguments: ["mod-id"]) {
     argParser
-      ..addFlag("override-game-versions",
-          abbr: "o", negatable: false, help: "Prompt which game versions to use instead of using the default ones")
-      ..addFlag("read-as-file",
-          abbr: "f",
-          negatable: false,
-          help: "Always interpret the second argument as a file, even if an artifact location is defined")
-      ..addFlag("confirm",
-          abbr: "c", negatable: false, help: "Whether uploading to each individual platform should be confirmed")
-      ..addFlag("confirm-relations",
-          abbr: "r", negatable: false, help: "Ask for each dependency whether it should be declared")
-      ..addOption("changelog-mode", help: "Override the default changelog mode", abbr: "l")
-      ..addFlag("preserve-file",
-          help: "Preserve the contents of the changelog file in editor mode", abbr: "p", negatable: false);
+      ..addFlag(
+        "override-game-versions",
+        abbr: "o",
+        negatable: false,
+        help: "Prompt which game versions to use instead of the configured defaults",
+      )
+      ..addFlag(
+        "read-as-file",
+        abbr: "f",
+        negatable: false,
+        help: "Always interpret the second argument as a file, even if an artifact location is defined",
+      )
+      ..addFlag(
+        "confirm",
+        abbr: "c",
+        negatable: false,
+        help: "Whether uploading to each individual platform should be confirmed",
+      )
+      ..addFlag(
+        "confirm-relations",
+        abbr: "r",
+        negatable: false,
+        help: "Ask for each dependency whether it should be declared",
+      )
+      ..addOption(
+        "changelog-mode",
+        help: "Override the default changelog mode",
+        abbr: "l",
+      )
+      ..addFlag(
+        "preserve-file",
+        help: "Preserve the contents of the changelog file in editor mode",
+        abbr: "p",
+        negatable: false,
+      );
   }
 
   @override
   void execute(ArgResults args) async {
-    if (args.rest.isEmpty) throw "Missing mod id. Usage: 'scatter upload <mod> [version]'";
-
-    var mod = ConfigManager.getMod(args.rest[0]);
-    if (mod == null) throw "Unknown mod id: '${args.rest[0]}'";
+    var mod = ConfigManager.getMod(args.rest.first);
+    if (mod == null) throw "Unknown mod id: '${args.rest.first}'";
 
     var zipDecoder = ZipDecoder();
 
@@ -170,6 +190,9 @@ class UploadCommand extends ScatterCommand {
       await adapter.upload(mod, spec);
     }
   }
+
+  @override
+  String get invocation => "${super.invocation} [version]";
 }
 
 Version _tryParseVersion(String input) {

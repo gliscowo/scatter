@@ -6,7 +6,7 @@ import '../scatter.dart';
 import 'scatter_command.dart';
 
 class RemoveCommand extends ScatterCommand {
-  RemoveCommand() : super("remove", "Removes the specified mod from the database", requiredArgCount: 1);
+  RemoveCommand() : super("remove", "Removes the specified mod from the database", arguments: ["mod-id"]);
 
   @override
   void execute(ArgResults args) async {

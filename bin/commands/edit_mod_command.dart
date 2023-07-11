@@ -12,7 +12,7 @@ import '../util.dart';
 import 'scatter_command.dart';
 
 class EditCommand extends ScatterCommand {
-  EditCommand() : super("edit", "Edit the specified mod", requiredArgCount: 1);
+  EditCommand() : super("edit", "Edit the specified mod", arguments: ["mod-id"]);
 
   @override
   void execute(ArgResults args) async {
@@ -28,12 +28,12 @@ class EditCommand extends ScatterCommand {
       ..addCommand(PrimitiveCommand.simple("view", "View the current mod configuration", () => print(mod.format())))
       ..addCommand(PrimitiveCommand.simple("save", "Save changes", () => ConfigManager.save<Database>()))
       ..addCommand(PrimitiveCommand("quit", "Quit this interface without saving", () => true))
+      ..addCommand(DepmodCommand(mod))
+      ..addCommand(SetPropertyCommand(mod))
       ..addCommand(PrimitiveCommand("done", "Save changes and quit this interface", () {
         ConfigManager.save<Database>();
         return true;
-      }))
-      ..addCommand(DepmodCommand(mod))
-      ..addCommand(SetPropertyCommand(mod));
+      }));
 
     while (true) {
       console.write("scatter > ");

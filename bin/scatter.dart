@@ -18,6 +18,7 @@ import 'commands/remove_mod_command.dart';
 import 'commands/upload_command.dart';
 import 'commands/validate_auth_command.dart';
 import 'config/config.dart';
+import 'console.dart';
 import 'version.dart';
 
 final client = Client();
@@ -104,4 +105,13 @@ c.AnsiControlSequence levelToColor(Level level) {
     < 600 => c.brightMagenta,
     _ => c.white
   };
+}
+
+Never scatterExit([int code = 1]) {
+  client.close();
+  console.resetColorAttributes();
+  console.showCursor();
+
+  stdin.echo = true;
+  exit(code);
 }

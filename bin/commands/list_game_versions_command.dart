@@ -7,8 +7,16 @@ import 'scatter_command.dart';
 
 class ListGameVersionsCommand extends ScatterCommand {
   ListGameVersionsCommand()
-      : super("list-game-versions", "Lists the game versions the given platform is aware of", requiredArgCount: 1) {
-    argParser.addOption("filter", abbr: "f");
+      : super(
+          "list-game-versions",
+          "Lists the game versions the given platform is aware of",
+          arguments: ["platform-id"],
+        ) {
+    argParser.addOption(
+      "filter",
+      abbr: "f",
+      help: "A search string to filter the game versions by",
+    );
   }
 
   @override

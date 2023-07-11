@@ -31,7 +31,7 @@ String prompt(String message, {bool secret = false}) {
   console.write("$inputColor$message: ");
   console.resetColorAttributes();
 
-  if (!secret) return console.readLine() ?? "";
+  if (!secret) return readLine();
 
   stdin.echo = false;
   final input = stdin.readLineSync();
@@ -48,7 +48,7 @@ Future<String> promptValidated(String message, ResponseValidator validator,
     console.write("$inputColor$message: ");
     console.resetColorAttributes();
 
-    var input = console.readLine()!;
+    var input = readLine();
     if ((emptyIsValid && input.trim().isEmpty) || await validator(input)) {
       response = input;
     } else if (invalidMessage != null) {
@@ -57,6 +57,15 @@ Future<String> promptValidated(String message, ResponseValidator validator,
   } while (response == null);
 
   return response;
+}
+
+String readLine() {
+  final input = console.readLine(cancelOnBreak: true);
+  if (input == null) {
+    scatterExit(1);
+  }
+
+  return input;
 }
 
 abstract class Formattable {
@@ -76,12 +85,19 @@ extension ModeExtensions on Stdin {
   }
 
   void restoreState() {
-    echo = _echo;
     line = _line;
+    echo = _echo;
   }
 
   set echo(bool echo) {
     if (echoMode == echo) return;
+
+    // for windows reasons we also have to set line mode
+    // to true when enabling echo. thank you microsoft
+    if (Platform.isWindows) {
+      line = true;
+    }
+
     echoMode = echo;
   }
 

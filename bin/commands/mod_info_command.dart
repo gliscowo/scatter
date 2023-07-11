@@ -5,7 +5,7 @@ import '../scatter.dart';
 import 'scatter_command.dart';
 
 class InfoCommand extends ScatterCommand {
-  InfoCommand() : super("info", "Prints information about a mod stored in the database", requiredArgCount: 1);
+  InfoCommand() : super("info", "Prints information about a mod stored in the database", arguments: ["mod-id"]);
 
   @override
   void execute(ArgResults args) async {
